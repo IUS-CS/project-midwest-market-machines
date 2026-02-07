@@ -1,5 +1,24 @@
-# Created by https://www.toptal.com/developers/gitignore/api/vim,intellij+all,visualstudiocode,intellij+iml,macos,windows,linux
-# Edit at https://www.toptal.com/developers/gitignore?templates=vim,intellij+all,visualstudiocode,intellij+iml,macos,windows,linux
+# Created by https://www.toptal.com/developers/gitignore/api/vim,intellij+all,intellij+iml,windows,macos,linux,visualstudiocode,cmake
+# Edit at https://www.toptal.com/developers/gitignore?templates=vim,intellij+all,intellij+iml,windows,macos,linux,visualstudiocode,cmake
+
+### CMake ###
+CMakeLists.txt.user
+CMakeCache.txt
+CMakeFiles
+CMakeScripts
+Testing
+Makefile
+cmake_install.cmake
+install_manifest.txt
+compile_commands.json
+CTestTestfile.cmake
+_deps
+
+### CMake Patch ###
+CMakeUserPresets.json
+
+# External projects
+*-prefix/
 
 ### Intellij+all ###
 # Covers JetBrains IDEs: IntelliJ, RubyMine, PhpStorm, AppCode, PyCharm, CLion, Android Studio, WebStorm and Rider
@@ -259,4 +278,4 @@ $RECYCLE.BIN/
 # Windows shortcuts
 *.lnk
 
-# End of https://www.toptal.com/developers/gitignore/api/vim,intellij+all,visualstudiocode,intellij+iml,macos,windows,linux
+# End of https://www.toptal.com/developers/gitignore/api/vim,intellij+all,intellij+iml,windows,macos,linux,visualstudiocode,cmake
