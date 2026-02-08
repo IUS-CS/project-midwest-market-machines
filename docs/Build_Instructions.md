@@ -37,7 +37,7 @@ cmake -B build        // Build the application.
 ./api_demo            // Run the application.
 ```
 
-> ![TIP]
+> [!TIP]
 > When changing the source code, you may run `make` to rebuild and recompile the appliction. No neeed to do all of these steps each time 
 
 More information is available via [CMake's Getting Started Page](https://cmake.org/cmake/help/book/mastering-cmake/chapter/Getting%20Started.html)
