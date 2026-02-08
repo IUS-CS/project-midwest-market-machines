@@ -37,6 +37,8 @@ cmake -B build        // Build the application.
 ./api_demo            // Run the application.
 ```
 
+![TIP] When changing the source code, you may run `make` to rebuild and recompile the appliction. No neeed to do all of these steps each time 
+
 More information is available via [CMake's Getting Started Page](https://cmake.org/cmake/help/book/mastering-cmake/chapter/Getting%20Started.html)
 ## Maintaining CMake
 An important callout is that CMake requires maintenance. Unlike Java, where we may call `import Java.utils.scanner;`, wherein Java handles getting that package/library and linking it to the source code, C++ does not do that for us.
@@ -48,5 +50,3 @@ CMake uses *its own langauge* in its configuration file. More information is ava
 Please check out `CMakeLists.txt` when you get a chance. If for any reason a package or library fails to be included when building the application, it's most likely that the `CMakeLists.txt` file has fallen into a state of disrepair.
 
 [Writing CMakeLists Files](https://cmake.org/cmake/help/book/mastering-cmake/chapter/Writing%20CMakeLists%20Files.html)
-
-```
