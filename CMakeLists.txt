@@ -15,7 +15,7 @@ FetchContent_Declare(
 ) 
 FetchContent_MakeAvailable(json)
 
-add_executable(api_demo api_demo.cpp)       # add_executable(<project>, <source>)
+add_executable(api_demo src/api_demo.cpp)       # add_executable(<project>, <source>)
 
 target_link_libraries(api_demo PRIVATE nlohmann_json::nlohmann_json)  # link <project> with <library>
 target_link_libraries(api_demo PRIVATE ixwebsocket)                   # link <project> with <library>
