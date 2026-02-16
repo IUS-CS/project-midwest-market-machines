@@ -3,14 +3,11 @@ The api_demo.cpp application requires a few dependencies. These dependencies in 
 
 CMake is an open-source build system generator. It handles cross-platform builds, system introspection, and user customized builds. The goal of CMake is to allow multiple developers to build the application from the source code on multiple different computers.
 
-It was not my intention nor my goal to include CMake in this project, as I had never heard of it. As noted earlier, the prototype dependencies rely on CMake as a build system. In an effort to complete the prototype as fast as possible, I opted to just stick to their documentation and use CMake.
-
 You may find more information on CMake at [CMake's website](https://cmake.org/cmake/help/book/mastering-cmake/chapter/Why%20CMake.html)
 
 # Building with CMake
-The inclusion of CMake in this project does complicate the build process slightly. Once you get use to using CMake, it's as easy as pie.
-
-So frett not, this will all be over soon:
+Once you get used to using CMake, it's as easy as pie.
+It's much easier to use than calling `g++ ...` for every build, but does require a *little* fiddling every now and then.
 
 ## Ensure CMake is installed
 Check if you have CMake by running `cmake --version`. If you have CMake, you will receive a message similar to the following:
@@ -26,19 +23,17 @@ Else, you will not receive this message.
 Follow the directions on [CMake's Downloads Page](https://cmake.org/download/). Otherwise... it's very popular, so you may find it in your package manager under `cmake`. At least it's in the package manager for Arch.
 
 ## How to build the appliction using CMake
-1. Navigate to the `/src` directory.
+1. Navigate to the `build/` directory for the project.
 2. Run the following commands:
 
 ```
-mkdir build           // Create a directory for build artifacts.
 cmake -DUSE_TLS=1 ..  // Enable TLS support.
-cmake -B /src/build   // Specify *where* to build to.
-cmake -B build        // Build the application.
+cmake ..              // Build the application using ../CMakeLists.txt
 ./api_demo            // Run the application.
 ```
 
 > [!TIP]
-> When changing the source code, you may run `make` to rebuild and recompile the appliction. No neeed to do all of these steps each time 
+> When changing the source code, you may run `make` from the `build/` directory to rebuild and recompile the application. No need to do all of these steps each time 
 
 More information is available via [CMake's Getting Started Page](https://cmake.org/cmake/help/book/mastering-cmake/chapter/Getting%20Started.html)
 ## Maintaining CMake
