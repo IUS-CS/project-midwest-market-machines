@@ -12,7 +12,7 @@ function App() {
       </div>
 
       <div className="App_header">
-        <h1>Welcome to Market Machine</h1>
+        <h1>Simple Trade</h1>
         <p>Your one-stop shop for all things crypto!</p>
       </div>
 
