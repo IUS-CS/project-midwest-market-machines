@@ -7,9 +7,7 @@ function App() {
 
   return (
     <>
-      <div className="navBar">
-        <Navbar />
-      </div>
+      <Navbar />
 
       <div className="App_header">
         <h1>Simple Trade</h1>

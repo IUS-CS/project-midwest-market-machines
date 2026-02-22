@@ -47,17 +47,8 @@
   padding: 2em;
 }
 
-
-.navBar {
-  background-color: #282c34;
-  padding: 1rem;
-  color: white;
-  width: 100%;
-  display: inline-block;
-}
-
 .watchlist {
-  background-color: #111827;
+  background-color: #282c34;
   padding: 1rem;
   border-radius: 8px;
   align-self: flex-start;   /* left side */
