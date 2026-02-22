@@ -47,9 +47,6 @@
   padding: 2em;
 }
 
-.read-the-docs {
-  color: #888;
-}
 
 .navBar {
   background-color: #282c34;
@@ -60,7 +57,7 @@
 }
 
 .watchlist {
-  background-color: #f5f5f5;
+  background-color: #111827;
   padding: 1rem;
   border-radius: 8px;
   align-self: flex-start;   /* left side */
