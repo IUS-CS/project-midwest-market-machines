@@ -14,9 +14,7 @@ function App() {
         <p>Your one-stop shop for all things crypto!</p>
       </div>
 
-      <div className="watchlist">
-        <Watchlist />
-      </div>
+      <Watchlist />
     </>
   )
 }

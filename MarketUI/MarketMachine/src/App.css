@@ -47,15 +47,7 @@
   padding: 2em;
 }
 
-.watchlist {
-  background-color: #282c34;
-  padding: 1rem;
-  border-radius: 8px;
-  align-self: flex-start;   /* left side */
-  margin: 1rem;
-  width: 280px;
-}
-.App_header {
+  .App_header {
   text-align: center;
   margin: 2rem;
 }

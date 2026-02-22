@@ -1,0 +1,15 @@
+.watchlist-wrapper-div {
+  display: block;
+  width: 300px;
+  padding: 1rem;
+  background-color: #282c34;
+}
+
+.watchlist{
+  display: flex;
+  width: 280px;
+  padding: 1rem;
+  border-radius: 8px;
+  align-self: flex-start;
+  background: #111827;
+}
