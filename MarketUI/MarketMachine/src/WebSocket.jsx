@@ -1,7 +1,7 @@
 import useWebSocket from 'react-use-websocket';
 import { useState, useEffect } from 'react';
 
-export const WebSocket = () => {
+const WebSocket = () => {
   const [price, setPrice] = useState(0);
   const SOCKET_URL = "ws://127.0.0.1:8080";
 
@@ -11,9 +11,11 @@ export const WebSocket = () => {
     shouldReconnect: () => true,
   });
 
-  if (readyState == 1) {
-    sendMessage("Test send from frontend");
-  }
+  useEffect(() => {
+    if (readyState == 1) {
+      sendMessage("Test send from frontend");
+    }
+  }, [readyState]);
 
   useEffect(() => {
     if (lastMessage) {
@@ -23,3 +25,5 @@ export const WebSocket = () => {
 
   return { price, sendMessage };
 };
+
+export default WebSocket;

@@ -1,9 +1,14 @@
 import './App.css'
 import Navbar from './components/navBar'
 import Watchlist from './components/Watchlist'
+import WebSocket from './WebSocket'
+import ShowPrice from './components/ShowPrice'
+
+
 
 function App() {
 
+  const { price } = WebSocket();
 
   return (
     <>
@@ -15,6 +20,7 @@ function App() {
       </div>
 
       <Watchlist />
+      <ShowPrice price={price} />
     </>
   )
 }
