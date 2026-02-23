@@ -32,22 +32,6 @@ build/*
 .cache
 
 ### CMake ###
-CMakeLists.txt.usr
-CMakeCache.txt
-CMakeFiles
-CMakeScripts
-Testing
-MakeFile
-cmake_install.cmake
-install_manifest.txt
-compile_commands.json
-CTestTestfile.cmake
-
-### CMake Patch ###
-CMakeUserPresets.json# Created by https://www.toptal.com/developers/gitignore/api/vim,intellij+all,intellij+iml,windows,macos,linux,visualstudiocode,cmake
-# Edit at https://www.toptal.com/developers/gitignore?templates=vim,intellij+all,intellij+iml,windows,macos,linux,visualstudiocode,cmake
-
-### CMake ###
 CMakeLists.txt.user
 CMakeCache.txt
 CMakeFiles
