@@ -1,3 +1,5 @@
+# Created by https://www.toptal.com/developers/gitignore/api/vim,intellij+all,intellij+iml,windows,macos,linux,visualstudiocode,cmake
+# Edit at https://www.toptal.com/developers/gitignore?templates=vim,intellij+all,intellij+iml,windows,macos,linux,visualstudiocode,cmake
 # Logs
 logs
 *.log
