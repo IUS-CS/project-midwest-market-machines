@@ -1,4 +1,4 @@
-## Midwest Marketing Machines
+## Midwest Market Machines
 
 ### Team
 
@@ -53,5 +53,6 @@
 
   </tr>
 </table>
+
 
 
