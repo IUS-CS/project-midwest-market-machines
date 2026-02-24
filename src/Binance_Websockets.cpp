@@ -28,23 +28,26 @@ int main(int argc, char *argv[]) {
   // Required for Windows.
   ix::initNetSystem();
 
-  WebSocket GetBTC;
-  GetBTC.setUrl("wss://stream.binance.us:9443/ws/btcusdt@avgPrice");
+  // json object to send to Binance to subscribe to the streams.
+  json SubscribeJSON = {{"method", "SUBSCRIBE"},
+                        {"params",
+                         {"btcusdt@avgPrice"},
+                         {"ethusdt@avgPrice"},
+                         {"adausdt@avgPrice"},
+                         {"xrpusdt@avgPrice"},
+                         {"dotusdt@avgPrice"},
+                         {"uniudst@avpPrice"}},
+                        {"id", 1}};
 
-  WebSocket GetETH;
-  GetETH.setUrl("wss://stream.binance.us:9443/ws/ethusdt@avgPrice");
+  // Create a WebSocket for getting info from Binance.
+  WebSocket BinanceStream;
+  BinanceStream.setUrl("wss://stream.binance.us:9443");
 
-  WebSocket GetADA;
-  GetADA.setUrl("wss://stream.binance.us:9443/ws/adausdt@avgPrice");
-
-  WebSocket GetXRP;
-  GetXRP.setUrl("wss://stream.binance.us:9443/ws/xrpusdt@avgPrice");
-
-  WebSocket GetDOT;
-  GetDOT.setUrl("wss://stream.binance.us:9443/ws/dotusdt@avgPrice");
-
-  WebSocket GetUNI;
-  GetUNI.setUrl("wss://stream.binance.us:9443/ws/uniusdt@avgPrice");
+  BinanceStream.setOnMessageCallback(
+      [&BinanceStream, &SubscribeJSON](const MessagePtr &msg) {
+        if (msg->type == MessageType::Message) {
+        }
+      });
 
   // Create a WebSocketServer to connect with frontend.
   WebSocketServer Server(8080, "127.0.0.1");
