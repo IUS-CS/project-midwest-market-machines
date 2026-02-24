@@ -16,7 +16,9 @@
 #include <ixwebsocket/IXWebSocketServer.h>
 #include <memory>
 #include <nlohmann/json.hpp>
+#include <string>
 
+//  Quality of life statements. All are unneccessary, strictly speaking.
 using json = nlohmann::json;
 using MessageType = ix::WebSocketMessageType;
 using WebSocket = ix::WebSocket;
@@ -43,19 +45,34 @@ int main(int argc, char *argv[]) {
   WebSocket BinanceStream;
   BinanceStream.setUrl("wss://stream.binance.us:9443");
 
-  BinanceStream.setOnMessageCallback(
-      [&BinanceStream, &SubscribeJSON](const MessagePtr &msg) {
-        if (msg->type == MessageType::Message) {
-        }
-      });
-
   // Create a WebSocketServer to connect with frontend.
   WebSocketServer Server(8080, "127.0.0.1");
+
+  // Set behavior on message receipt from Binance.
+  BinanceStream.setOnMessageCallback(
+      [&BinanceStream, &SubscribeJSON, &Server](const MessagePtr &msg) {
+        if (msg->type == MessageType::Message) {
+          json Received = json::parse(msg->str);
+
+          json Shortened;
+          Shortened["Symbol"] = Received["s"];
+          Shortened["Price"] = Received["p"];
+          string Sent = Shortened.dump();
+
+          for (auto &&client : Server.getClients()) {
+            client->send(Sent);
+          }
+        } else if (msg->type == MessageType::Open) {
+          BinanceStream.send(SubscribeJSON.dump());
+        } else if (msg->type == MessageType::Close) {
+          BinanceStream.stop();
+        }
+      });
 
   // Set behavior on message receipt from frontend.
   Server.setOnClientMessageCallback(
       [&Server](shared_ptr<ix::ConnectionState> connectionState,
-                WebSocket &webSocket, const ix::WebSocketMessagePtr &msg) {
+                WebSocket &webSocket, const MessagePtr &msg) {
         cout << "Remote ip: " << connectionState->getRemoteIp() << endl;
 
         if (msg->type == MessageType::Open) {
@@ -64,6 +81,7 @@ int main(int argc, char *argv[]) {
           webSocket.send("Connected");
         }
         if (msg->type == MessageType::Close) {
+          Server.stop();
         }
       });
 }
