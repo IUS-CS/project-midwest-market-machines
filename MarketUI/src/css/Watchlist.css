@@ -16,11 +16,12 @@
   background: #111827;
 }
 
-/* User added styles from local copy */
-.watchlist li{
-    text-decoration: none;
+.watchlist h2 {
+  margin-bottom: 1rem;
+  color: #fff;
 }
-.watchlist li a{
-    text-decoration: none;
-    color: black;
+.watchlist ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
 }
