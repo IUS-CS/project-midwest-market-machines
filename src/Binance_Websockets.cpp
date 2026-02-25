@@ -10,6 +10,7 @@
 #include "ixwebsocket/IXWebSocketMessage.h"
 #include "ixwebsocket/IXWebSocketMessageType.h"
 #include <chrono>
+#include <cstddef>
 #include <iostream>
 #include <ixwebsocket/IXNetSystem.h>
 #include <ixwebsocket/IXUserAgent.h>
@@ -17,6 +18,7 @@
 #include <ixwebsocket/IXWebSocketServer.h>
 #include <memory>
 #include <nlohmann/json.hpp>
+#include <random>
 #include <string>
 #include <thread>
 
@@ -28,68 +30,10 @@ using WebSocketServer = ix::WebSocketServer;
 using MessagePtr = ix::WebSocketMessagePtr;
 using namespace std;
 
-int main(int argc, char *argv[]) {
-  // Required for Windows.
-  ix::initNetSystem();
+WebSocketServer Server;
 
-  // json object to send to Binance to subscribe to the streams.
-  json SubscribeJSON;
-
-  string coins[] = {"BTCUSDT", "ETHUSDT", "ADAUSDT",
-                    "XRPUSDT", "DOTUSDT", "UNIUSDT"};
-
-  // Create a WebSocket for getting info from Binance.
-  WebSocket BinanceStream;
-  BinanceStream.setUrl("wss://ws-api.binance.us:9443/ws-api/v3");
-
-  // Create a WebSocketServer to connect with frontend.
+void CreateServer() {
   WebSocketServer Server(8080, "127.0.0.1");
-
-  // Set behavior on message receipt from Binance.
-  BinanceStream.setOnMessageCallback(
-      [&BinanceStream, &SubscribeJSON, &coins, &Server](const MessagePtr &msg) {
-        SubscribeJSON["id"] = "1";
-        SubscribeJSON["method"] = "avgPrice";
-        SubscribeJSON["params"]["symbol"] = "BTCUSDT";
-        // SubscribeJSON["params"]["returnRateLimits"] = false;
-
-        if (msg->type == MessageType::Message) {
-          for (int i = 0; i < coins->length() - 1; i++) {
-            json Received = json::parse(msg->str);
-
-            cout << "Received:\n" << Received.dump(4) << "\n" << endl;
-
-            // Discard what the front will not need.
-            json Shortened;
-            Shortened["Symbol"] = Received["s"];
-            Shortened["Price"] = Received["w"];
-            string Sent = Shortened.dump(4);
-
-            // Print sent strings to console.
-            cout << "Sent to front:\n" << Sent << "\n" << endl;
-
-            for (auto &&client : Server.getClients()) {
-              client->send(Sent);
-            }
-
-            // for (int i = 0; i < coins->length() - 1; i++) {
-            SubscribeJSON["id"] = coins[i];
-            SubscribeJSON["params"]["symbol"] = coins[i];
-
-            this_thread::sleep_for(chrono::milliseconds(10000));
-            BinanceStream.send(SubscribeJSON.dump(2));
-            cout << "Sent:\n" << SubscribeJSON.dump(2) << endl;
-            //}
-          }
-
-        } else if (msg->type == MessageType::Open) {
-          cout << "Socket is open. Sending:\n" << SubscribeJSON.dump(4) << endl;
-          BinanceStream.send(SubscribeJSON.dump(4));
-        } else if (msg->type == MessageType::Close) {
-          cout << "Socket is closed." << endl;
-          BinanceStream.stop();
-        }
-      });
 
   // Set behavior on message receipt from frontend.
   Server.setOnClientMessageCallback(
@@ -106,8 +50,53 @@ int main(int argc, char *argv[]) {
           Server.stop();
         }
       });
+}
+
+void ConnectToWebSocket(const string &coin) {
+  WebSocket Socket;
+  Socket.setUrl("wss://ws-api.binance.us:9443/ws-api/v3");
+
+  mt19937 mt(time(nullptr));
+  long ID = mt();
+
+  json SubscribeJSON = {
+      {"id", ID},
+      {"method", "avgPrice"},
+      {"params", {"symbol", coin}},
+  };
+
+  Socket.setOnMessageCallback(
+      [&Socket, coin, &SubscribeJSON](const MessagePtr &msg) {
+        if (msg->type == MessageType::Message) {
+          json Received = json::parse(msg->str);
+
+          json Shortened;
+          Shortened["id"] = Received["id"];
+          Shortened["price"] = Received["price"];
+          string OutBound = Shortened.dump(2);
+
+          for (auto &&client : Server.getClients()) {
+            client->send(OutBound);
+          }
+
+          this_thread::sleep_for(chrono::milliseconds(2000));
+        } else if (msg->type == MessageType::Open) {
+          Socket.send(SubscribeJSON.dump(2));
+        } else if (msg->type == MessageType::Close) {
+          Socket.close();
+        }
+      });
+}
+
+int main(int argc, char *argv[]) {
+  // Required for Windows.
+  ix::initNetSystem();
+
+  // Create a WebSocketServer to connect with frontend.
+  WebSocketServer Server(8080, "127.0.0.1");
 
   Server.listenAndStart();
   cout << "Server is up." << endl;
-  BinanceStream.run();
+  BTC_Stream.run();
+  // BTC_Stream.run();
 }
