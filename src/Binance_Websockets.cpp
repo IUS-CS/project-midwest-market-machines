@@ -49,7 +49,10 @@ const bool DEBUG = true;
 
 //-------------------Global Declarations--------------------
 WebSocketServer Server(8080, "127.0.0.1");
+// Put the WebSockets here so they don't die.
+// seg fault if you remove this without implementing something else.
 vector<unique_ptr<WebSocket>> SocketsVector;
+// Just for printing during DEBUG.
 mutex PrintLocker;
 //----------------------------------------------------------
 
