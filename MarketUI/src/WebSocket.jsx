@@ -26,37 +26,6 @@ const WebSocket = (selectedCoin) => {
       }
     },
   });
-
-  /*
-  const connectionStatus = {
-    [ReadyState.CONNECTING]: 'Connecting',
-    [ReadyState.OPEN]: 'Open',
-    [ReadyState.CLOSING]: 'Closing',
-    [ReadyState.CLOSED]: 'Closed',
-    [ReadyState.UNINSTANTIATED]: 'UNINSTANTIATED'
-  }[readyState];
-
-  WebSocket.onMessage = (MessageEvent) => {
-    const data = JSON.parse(MessageEvent.data);
-    setLastMessage(data);
-    onMessage?.(data);
-    console.log(data);
-  }
-
-  /*
-  useEffect(() => {
-    if (readyState == 1) {
-      sendMessage("Test send from frontend");
-    }
-  }, [readyState]);
-  
-
-  useEffect(() => {
-    if (data != null) {
-      setPrice(data);
-    }
-  }, [lastJsonMessage]);
-  */
   return { price, sendMessage };
 };
 
