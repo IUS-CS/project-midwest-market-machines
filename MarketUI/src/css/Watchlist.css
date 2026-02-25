@@ -15,3 +15,12 @@
   align-self: flex-start;
   background: #111827;
 }
+
+/* User added styles from local copy */
+.watchlist li{
+    text-decoration: none;
+}
+.watchlist li a{
+    text-decoration: none;
+    color: black;
+}
