@@ -20,7 +20,8 @@ const WebSocket = () => {
       const JSONData = JSON.parse(event.data);
       const coin = JSONData["coin"];
       const price = JSONData["price"];
-      console.log(coin + ": " + price);
+      console.log(coin + ": $" + price);
+      setPrice(price);
     },
   });
 
