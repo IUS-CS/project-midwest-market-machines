@@ -75,9 +75,9 @@ void StartServer() {
           cout << "Uri: " << msg->openInfo.uri << endl;
           webSocket.send("Connected");
         }
-        if (msg->type == MessageType::Close) {
-          Server.stop();
-        }
+        // if (msg->type == MessageType::Close) {
+        // Server.stop();
+        //}
       });
 
   Server.listenAndStart();
@@ -144,7 +144,7 @@ void ConnectToWebSocket(const string &coin) {
           Shortened["id"] = Received["id"];
           Shortened["coin"] = Coin;
           Shortened["price"] = Received["result"]["price"];
-          string Outbound = Shortened.dump(2);
+          string Outbound = Shortened.dump(0);
 
           for (auto &&client : Server.getClients()) {
             client->send(Outbound);
