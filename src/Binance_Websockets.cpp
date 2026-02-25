@@ -30,15 +30,14 @@ using WebSocketServer = ix::WebSocketServer;
 using MessagePtr = ix::WebSocketMessagePtr;
 using namespace std;
 
-WebSocketServer Server;
+WebSocketServer Server(8080, "127.0.0.1");
+vector<unique_ptr<WebSocket>> SocketsVector;
 
 void CreateServer() {
-  WebSocketServer Server(8080, "127.0.0.1");
-
   // Set behavior on message receipt from frontend.
   Server.setOnClientMessageCallback(
-      [&Server](shared_ptr<ix::ConnectionState> connectionState,
-                WebSocket &webSocket, const MessagePtr &msg) {
+      [](shared_ptr<ix::ConnectionState> connectionState, WebSocket &webSocket,
+         const MessagePtr &msg) {
         cout << "Remote ip: " << connectionState->getRemoteIp() << endl;
 
         if (msg->type == MessageType::Open) {
@@ -50,53 +49,75 @@ void CreateServer() {
           Server.stop();
         }
       });
+
+  auto res = Server.listen();
+  if (res.first) {
+    Server.start();
+  }
 }
 
 void ConnectToWebSocket(const string &coin) {
-  WebSocket Socket;
-  Socket.setUrl("wss://ws-api.binance.us:9443/ws-api/v3");
+  auto Socket = make_unique<WebSocket>();
+  Socket->setUrl("wss://ws-api.binance.us:9443/ws-api/v3");
+  int ID = rand();
 
-  mt19937 mt(time(nullptr));
-  long ID = mt();
+  Socket->setOnMessageCallback(
+      [S = Socket.get(), Coin = coin, ID = ID](const MessagePtr &msg) {
+        json SubscribeJSON;
+        // json SubscribeJSON = {
+        //     {"id", ID}, {"method", "avgPrice"}, {"params", {"symbol",
+        //     Coin}}};
+        SubscribeJSON["id"] = ID;
+        SubscribeJSON["method"] = "avgPrice";
+        SubscribeJSON["params"]["symbol"] = Coin;
 
-  json SubscribeJSON = {
-      {"id", ID},
-      {"method", "avgPrice"},
-      {"params", {"symbol", coin}},
-  };
-
-  Socket.setOnMessageCallback(
-      [&Socket, coin, &SubscribeJSON](const MessagePtr &msg) {
+        cout << "DUMP SUBSCRIBEJSON\n" << SubscribeJSON.dump(2) << endl;
         if (msg->type == MessageType::Message) {
           json Received = json::parse(msg->str);
 
+          cout << "Received:\n" << Received.dump(2) << endl;
+
           json Shortened;
           Shortened["id"] = Received["id"];
-          Shortened["price"] = Received["price"];
+          Shortened["coin"] = Coin;
+          Shortened["price"] = Received["result"]["price"];
           string OutBound = Shortened.dump(2);
+
+          cout << "Sent to client:\n" << OutBound << endl;
 
           for (auto &&client : Server.getClients()) {
             client->send(OutBound);
+            cout << "Client: " << client << endl;
           }
 
-          this_thread::sleep_for(chrono::milliseconds(2000));
+          this_thread::sleep_for(chrono::milliseconds(4000));
+          S->send(SubscribeJSON.dump(2));
         } else if (msg->type == MessageType::Open) {
-          Socket.send(SubscribeJSON.dump(2));
+          S->send(SubscribeJSON.dump(2));
         } else if (msg->type == MessageType::Close) {
-          Socket.close();
+          S->close();
         }
       });
+
+  Socket->start();
+  SocketsVector.push_back(move(Socket));
 }
 
 int main(int argc, char *argv[]) {
   // Required for Windows.
   ix::initNetSystem();
 
-  // Create a WebSocketServer to connect with frontend.
-  WebSocketServer Server(8080, "127.0.0.1");
+  string coins[] = {"BTCUSDT", "ETHUSDT", "ADAUSDT",
+                    "XRPUSDT", "DOTUSDT", "UNIUSDT"};
 
-  Server.listenAndStart();
-  cout << "Server is up." << endl;
-  BTC_Stream.run();
-  // BTC_Stream.run();
+  CreateServer();
+  // for (const string &coin : coins) {
+  //   ConnectToWebSocket(coin);
+  // }
+
+  ConnectToWebSocket(coins[0]);
+
+  while (true) {
+    this_thread::sleep_for(chrono::seconds(1));
+  }
 }
