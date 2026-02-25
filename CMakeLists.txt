@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.5)         # Specify the minimum required cmake version for this project.
-project(api_demo)                           # Specify the project's name. Append `.exe` if needed.
+project(Binance_Websockets)                 # Specify the project's name. Append `.exe` if needed.
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS on)       # Export a list of compile commands to make clang shut up about errors.
 
@@ -17,11 +17,8 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(json)
 
-add_executable(api_demo src/api_demo.cpp)       # add_executable(<project>, <source>)
+add_executable(Binance_Websockets src/Binance_Websockets.cpp)       # add_executable(<project>, <source>)
 
-target_link_libraries(api_demo PRIVATE nlohmann_json::nlohmann_json ixwebsocket)  # link <project> with <library> <library>
-
-add_executable(Binance_Websockets src/Binance_Websockets.cpp)
-target_link_libraries(Binance_Websockets PRIVATE nlohmann_json::nlohmann_json ixwebsocket)
+target_link_libraries(Binance_Websockets PRIVATE nlohmann_json::nlohmann_json ixwebsocket)  # link <project> with <library> <library>
 
 add_executable(Risk_Analyzer src/Risk_Analyzer.cpp)
