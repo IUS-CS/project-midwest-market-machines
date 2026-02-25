@@ -1,25 +1,29 @@
 import { useState } from 'react';
 import '../css/Watchlist.css'
 
-
 // Watchlist component to display user's watchlist
-const Watchlist = () => {
-  const [watchlist, setWatchlist] = useState(["BTC", "ETH",
-    "ADA", "XRP", "DOT", "UNI"]);
+const Watchlist = ({ onCoin, currentCoin }) => {
+  const coins = ["BTCUSDT", "ETHUSDT", "ADAUSDT", "XRPUSDT", "DOTUSDT", "UNIUSDT"];
 
   return (
     <div className="watchlist-wrapper-div">
       <nav className="watchlist">
         <h2>My Watchlist</h2>
         <ul>
-          {watchlist.map((item, index) => (
-            <li key={index}>{item}</li>
+          {coins.map((coin) => (
+            <li
+              key={coin}
+              className={currentCoin === coin ? "active" : ""}
+              onClick={() => onCoin(coin)}
+              style={{ cursor: 'pointer' }}
+            >
+              {coin.replace('USDT', '')}
+            </li>
           ))}
         </ul>
       </nav>
     </div>
   );
-
 }
 
 export default Watchlist;

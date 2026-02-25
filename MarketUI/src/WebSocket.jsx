@@ -1,13 +1,13 @@
 import useWebSocket, { ReadyState } from 'react-use-websocket';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 
-const WebSocket = () => {
+const WebSocket = (selectedCoin) => {
   const [price, setPrice] = useState(0);
   const SOCKET_URL = "ws://127.0.0.1:8080";
 
 
 
-  const { sendMessage, lastJsonMessage, readyState } = useWebSocket(
+  const { sendMessage, readyState } = useWebSocket(
     SOCKET_URL, {
     share: true,
     shouldReconnect: () => true,
@@ -21,10 +21,13 @@ const WebSocket = () => {
       const coin = JSONData["coin"];
       const price = JSONData["price"];
       console.log(coin + ": $" + price);
-      setPrice(price);
+      if (coin === selectedCoin) {
+        setPrice(price);
+      }
     },
   });
 
+  /*
   const connectionStatus = {
     [ReadyState.CONNECTING]: 'Connecting',
     [ReadyState.OPEN]: 'Open',

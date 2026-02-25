@@ -1,14 +1,14 @@
+import { useState } from 'react'
 import './App.css'
 import Navbar from './components/navBar'
 import Watchlist from './components/Watchlist'
 import WebSocket from './WebSocket'
 import ShowPrice from './components/ShowPrice'
 
-
-
 function App() {
+  const [currentCoin, setCurrentCoin] = useState('BTCUSDT');
+  const { price } = WebSocket(currentCoin);
 
-  const { price } = WebSocket();
 
   return (
     <>
@@ -19,8 +19,8 @@ function App() {
         <p>Your one-stop shop for all things crypto!</p>
       </div>
 
-      <Watchlist />
-      <ShowPrice price={price} />
+      <Watchlist onCoin={(c) => setCurrentCoin(c)} currentCoin={currentCoin} />
+      <ShowPrice price={price} coin={currentCoin} />
     </>
   )
 }

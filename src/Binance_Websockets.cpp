@@ -75,6 +75,7 @@ void StartServer() {
           cout << "Uri: " << msg->openInfo.uri << endl;
           webSocket.send("Connected");
         }
+        // Commented out while debugging frontend.
         // if (msg->type == MessageType::Close) {
         // Server.stop();
         //}
