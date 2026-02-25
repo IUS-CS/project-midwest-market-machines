@@ -30,8 +30,11 @@ using WebSocketServer = ix::WebSocketServer;
 using MessagePtr = ix::WebSocketMessagePtr;
 using namespace std;
 
+const bool DEBUG = true;
+
 WebSocketServer Server(8080, "127.0.0.1");
 vector<unique_ptr<WebSocket>> SocketsVector;
+mutex PrintLocker;
 
 void CreateServer() {
   // Set behavior on message receipt from frontend.
@@ -64,32 +67,31 @@ void ConnectToWebSocket(const string &coin) {
   Socket->setOnMessageCallback(
       [S = Socket.get(), Coin = coin, ID = ID](const MessagePtr &msg) {
         json SubscribeJSON;
-        // json SubscribeJSON = {
-        //     {"id", ID}, {"method", "avgPrice"}, {"params", {"symbol",
-        //     Coin}}};
         SubscribeJSON["id"] = ID;
         SubscribeJSON["method"] = "avgPrice";
         SubscribeJSON["params"]["symbol"] = Coin;
 
-        cout << "DUMP SUBSCRIBEJSON\n" << SubscribeJSON.dump(2) << endl;
         if (msg->type == MessageType::Message) {
           json Received = json::parse(msg->str);
-
-          cout << "Received:\n" << Received.dump(2) << endl;
 
           json Shortened;
           Shortened["id"] = Received["id"];
           Shortened["coin"] = Coin;
           Shortened["price"] = Received["result"]["price"];
-          string OutBound = Shortened.dump(2);
-
-          cout << "Sent to client:\n" << OutBound << endl;
+          string Outbound = Shortened.dump(2);
 
           for (auto &&client : Server.getClients()) {
-            client->send(OutBound);
-            cout << "Client: " << client << endl;
+            client->send(Outbound);
           }
 
+          if (DEBUG) {
+            PrintLocker.lock();
+            cout << "SubscribeJSON:\n" << SubscribeJSON.dump(2) << "\n" << endl;
+            cout << "Received:\n" << Received.dump(2) << "\n" << endl;
+            cout << "Sent to client:\n" << Outbound << "\n" << endl;
+            cout << "----------------------------------------" << endl;
+            PrintLocker.unlock();
+          }
           this_thread::sleep_for(chrono::milliseconds(4000));
           S->send(SubscribeJSON.dump(2));
         } else if (msg->type == MessageType::Open) {
@@ -111,11 +113,11 @@ int main(int argc, char *argv[]) {
                     "XRPUSDT", "DOTUSDT", "UNIUSDT"};
 
   CreateServer();
-  // for (const string &coin : coins) {
-  //   ConnectToWebSocket(coin);
-  // }
+  for (const string &coin : coins) {
+    ConnectToWebSocket(coin);
+  }
 
-  ConnectToWebSocket(coins[0]);
+  // ConnectToWebSocket(coins[0]);
 
   while (true) {
     this_thread::sleep_for(chrono::seconds(1));
