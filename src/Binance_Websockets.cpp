@@ -9,6 +9,7 @@
 #include "ixwebsocket/IXConnectionState.h"
 #include "ixwebsocket/IXWebSocketMessage.h"
 #include "ixwebsocket/IXWebSocketMessageType.h"
+#include <chrono>
 #include <iostream>
 #include <ixwebsocket/IXNetSystem.h>
 #include <ixwebsocket/IXUserAgent.h>
@@ -17,6 +18,7 @@
 #include <memory>
 #include <nlohmann/json.hpp>
 #include <string>
+#include <thread>
 
 //  Quality of life statements. All are unneccessary, strictly speaking.
 using json = nlohmann::json;
@@ -32,12 +34,9 @@ int main(int argc, char *argv[]) {
 
   // json object to send to Binance to subscribe to the streams.
   json SubscribeJSON;
-  SubscribeJSON["method"] = "avgPrice";
-  SubscribeJSON["params"]["symbol"] = "BTCUSDT";
-  SubscribeJSON["id"] = 1;
-  SubscribeJSON["returnRateLimits"] = false;
 
-  cout << SubscribeJSON.dump(2) << endl;
+  string coins[] = {"BTCUSDT", "ETHUSDT", "ADAUSDT",
+                    "XRPUSDT", "DOTUSDT", "UNIUSDT"};
 
   // Create a WebSocket for getting info from Binance.
   WebSocket BinanceStream;
@@ -48,23 +47,39 @@ int main(int argc, char *argv[]) {
 
   // Set behavior on message receipt from Binance.
   BinanceStream.setOnMessageCallback(
-      [&BinanceStream, &SubscribeJSON, &Server](const MessagePtr &msg) {
+      [&BinanceStream, &SubscribeJSON, &coins, &Server](const MessagePtr &msg) {
+        SubscribeJSON["id"] = "1";
+        SubscribeJSON["method"] = "avgPrice";
+        SubscribeJSON["params"]["symbol"] = "BTCUSDT";
+        // SubscribeJSON["params"]["returnRateLimits"] = false;
+
         if (msg->type == MessageType::Message) {
-          json Received = json::parse(msg->str);
+          for (int i = 0; i < coins->length() - 1; i++) {
+            json Received = json::parse(msg->str);
 
-          cout << "Received:\n" << Received.dump(4) << "\n" << endl;
+            cout << "Received:\n" << Received.dump(4) << "\n" << endl;
 
-          // Discard what the front will not need.
-          json Shortened;
-          Shortened["Symbol"] = Received["s"];
-          Shortened["Price"] = Received["w"];
-          string Sent = Shortened.dump(4);
+            // Discard what the front will not need.
+            json Shortened;
+            Shortened["Symbol"] = Received["s"];
+            Shortened["Price"] = Received["w"];
+            string Sent = Shortened.dump(4);
 
-          // Print sent strings to console.
-          cout << "Sent to front:\n" << Sent << "\n" << endl;
+            // Print sent strings to console.
+            cout << "Sent to front:\n" << Sent << "\n" << endl;
 
-          for (auto &&client : Server.getClients()) {
-            client->send(Sent);
+            for (auto &&client : Server.getClients()) {
+              client->send(Sent);
+            }
+
+            // for (int i = 0; i < coins->length() - 1; i++) {
+            SubscribeJSON["id"] = coins[i];
+            SubscribeJSON["params"]["symbol"] = coins[i];
+
+            this_thread::sleep_for(chrono::milliseconds(10000));
+            BinanceStream.send(SubscribeJSON.dump(2));
+            cout << "Sent:\n" << SubscribeJSON.dump(2) << endl;
+            //}
           }
 
         } else if (msg->type == MessageType::Open) {
