@@ -69,6 +69,8 @@ target_link_libraries(
   SmokeTest
   PRIVATE gtest
   GTest::gtest_main
+  nlohmann_json::nlohmann_json
+  ixwebsocket
 )
 
 gtest_discover_tests(SmokeTest)
