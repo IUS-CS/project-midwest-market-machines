@@ -51,4 +51,5 @@ This will run `SmokeTest`, a file you made while building with CMake.
 
 ## The Launch Page
 
-![Launch Page](https://raw.githubusercontent.com/IUS-CS/project-midwest-market-machines/refs/heads/main/docs/Simple%20Trade.png)
+![Launch Page](https://github.com/IUS-CS/project-midwest-market-machines/blob/main/docs/Simple%20Trade.png)
+
