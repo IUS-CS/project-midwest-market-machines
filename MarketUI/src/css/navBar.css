@@ -1,0 +1,48 @@
+.navBar-wrapper-div {
+  width: 100%;
+  background-color: #111827;
+}
+
+.navbar {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: 1rem 1.5rem;
+}
+
+.navbar-logo h1 {
+  margin: 0;
+  font-size: 1.8rem;
+  font-weight: 900;
+  letter-spacing: 1px;
+  color: white;
+  font-family: "Oswald", sans-serif;
+}
+
+.navbar-spacer {
+  flex: 1;
+}
+
+.navbar-links {
+  list-style: none;
+  display: flex;
+  gap: 2.5rem;
+  margin: 0;
+
+  padding: 0;
+  width: auto;
+  max-width: none;
+
+  margin-right: 6rem;
+}
+
+.navbar-links a {
+  text-decoration: none;
+  color: white;
+  font-weight: 600;
+  font-size: 1rem;
+}
+
+.navbar-links a:hover {
+  opacity: 0.7;
+}
