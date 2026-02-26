@@ -1,0 +1,15 @@
+.ShowPrice-wrapper-div {
+  display: block;
+  width: 300px;
+  padding: 1rem;
+  background-color: #282c34;
+}
+
+.ShowPrice {
+  display: flex;
+  width: 280px;
+  justify-content: space-between;
+  padding: 1rem;
+  border-radius: 8px;
+  background-color: #111827;
+}
