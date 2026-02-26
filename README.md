@@ -7,31 +7,28 @@ Simple Trade is an AI-assisted trading application for major cryptocurrencies an
 
 
 ### Dependencies
-Simple Trade requires that you have [CMake](https://cmake.org/download/) installed.
+Simple Trade requires that you have [Node.js](https://nodejs.org/en/download) installed.
 
-To check if CMake is installed, open your operating system's terminal and type `cmake --version`. If the command isn't recognized, you can download it [here](https://cmake.org/download/).
+To check if Node.js is installed, open your operating system's terminal and type `node -v` and `npm -v`. If the command isn't recognized, you can download it [here](https://nodejs.org/en/download).
 
 ### Building
-*A more in-depth verison of the building section can be found in `docs/Build_Instructions.md`*
-1. Navigate to the `build/` directory for the project.
-2. Run the following commands:
 
+1. Navigate to the `MarketUI` directory for the project. This can be done by copying the path when in the `MarketUI` folder, and then typing `cd [CopiedPath]\MarketUI` into your terminal (i.e. Command Prompt).
+2. Run the following commands:
 ```
-cmake -DUSE_TLS=1 ..  // Enable TLS support.
-cmake ..              // Build the application using ../CMakeLists.txt
-./api_demo            // Run the application.
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
+npm install --legacy-peer-deps
+npm run dev
 ```
 
 > [!TIP]
-> When changing the source code, you may run `make` from the `build/` directory to rebuild and recompile the application. No need to do all of these steps each time 
+> You may get an error after running `npm install --legacy-peer-deps`, but it can be safely ignored.
 
-More information is available via [CMake's Getting Started Page](https://cmake.org/cmake/help/book/mastering-cmake/chapter/Getting%20Started.html).
+After you run these commands, copy the `https://localhost:[numbers]/` address and paste it into your browser's address bar to get to the launch page.
 
-
-
-## Example Run
+## The Launch Page
 
 
-![Terminal_With_Text](https://raw.githubusercontent.com/IUS-CS/project-midwest-market-machines/refs/heads/main/docs/Pasted%20image.png)
+![Launch Page](https://raw.githubusercontent.com/IUS-CS/project-midwest-market-machines/refs/heads/main/docs/Simple%20Trade.png)
 
 
