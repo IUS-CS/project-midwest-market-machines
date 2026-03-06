@@ -312,4 +312,7 @@ $RECYCLE.BIN/
 # Windows shortcuts
 *.lnk
 
+# Windows Zlib + MbedTLS builder
+vcpkg/
+
 # End of https://www.toptal.com/developers/gitignore/api/vim,intellij+all,intellij+iml,windows,macos,linux,visualstudiocode,cmake
