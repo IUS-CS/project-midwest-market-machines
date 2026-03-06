@@ -9,20 +9,24 @@
 ###################################################################################################################
 
 cmake_minimum_required(VERSION 3.10)       # Updated to 3.10 for vcpkg toolchain support
+if(POLICY CMP0135)
+  cmake_policy(SET CMP0135 NEW)
+endif()
 
+if(WIN32)
 # Auto vcpkg setup: clones, bootstraps, needs to load before project() call
 set(VCPKG_ROOT "${CMAKE_SOURCE_DIR}/vcpkg")
 if(NOT EXISTS "${VCPKG_ROOT}")
     execute_process(COMMAND git clone https://github.com/microsoft/vcpkg.git "${VCPKG_ROOT}")
-    if(WIN32)
+
         execute_process(COMMAND "${VCPKG_ROOT}/bootstrap-vcpkg.bat" WORKING_DIRECTORY "${VCPKG_ROOT}")
     else()
         execute_process(COMMAND "${VCPKG_ROOT}/bootstrap-vcpkg.sh" WORKING_DIRECTORY "${VCPKG_ROOT}")
     endif()
-endif()
+
 set(CMAKE_TOOLCHAIN_FILE "${VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake" CACHE STRING "" FORCE)
 execute_process(COMMAND "${VCPKG_ROOT}/vcpkg" install zlib mbedtls)
-
+endif()
 enable_testing()
 
 project(Binance_Websockets)                # Specify the project's name. Append `.exe` if needed.
