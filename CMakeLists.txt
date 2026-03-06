@@ -18,11 +18,8 @@ if(WIN32)
 set(VCPKG_ROOT "${CMAKE_SOURCE_DIR}/vcpkg")
 if(NOT EXISTS "${VCPKG_ROOT}")
     execute_process(COMMAND git clone https://github.com/microsoft/vcpkg.git "${VCPKG_ROOT}")
-
-        execute_process(COMMAND "${VCPKG_ROOT}/bootstrap-vcpkg.bat" WORKING_DIRECTORY "${VCPKG_ROOT}")
-    else()
-        execute_process(COMMAND "${VCPKG_ROOT}/bootstrap-vcpkg.sh" WORKING_DIRECTORY "${VCPKG_ROOT}")
-    endif()
+    execute_process(COMMAND "${VCPKG_ROOT}/bootstrap-vcpkg.bat" WORKING_DIRECTORY "${VCPKG_ROOT}")
+endif()
 
 set(CMAKE_TOOLCHAIN_FILE "${VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake" CACHE STRING "" FORCE)
 execute_process(COMMAND "${VCPKG_ROOT}/vcpkg" install zlib mbedtls)
