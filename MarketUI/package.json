@@ -9,7 +9,6 @@
     "test": "vitest",
     "lint": "eslint .",
     "preview": "vite preview",
-     "test": "vitest",
     "test:ui": "vitest --ui",
     "test:run": "vitest run",
     "test:coverage": "vitest run --coverage"
@@ -21,6 +20,9 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.0.0",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.2",
+    "@testing-library/user-event": "^14.6.1",
     "@types/react": "^19.2.7",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^5.1.1",
@@ -31,5 +33,4 @@
     "vite": "^7.3.1",
     "vitest": "^4.0.18"
   }
-  
 }
