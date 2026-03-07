@@ -33,6 +33,9 @@ _deps
 build/*
 .cache
 
+# Local automation scripts
+git-auto.ps1
+
 ### CMake ###
 CMakeLists.txt.user
 CMakeCache.txt
@@ -313,3 +316,5 @@ $RECYCLE.BIN/
 *.lnk
 
 # End of https://www.toptal.com/developers/gitignore/api/vim,intellij+all,intellij+iml,windows,macos,linux,visualstudiocode,cmake
+
+# ignore my auto git pull file
