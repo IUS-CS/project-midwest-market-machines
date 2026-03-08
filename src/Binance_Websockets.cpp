@@ -102,8 +102,8 @@ void StartServer() {
  * 1. Create a unique WebSocket pointer.
  * 2. Set its URL.
  * 3. Create a unique ID to identify the socket.
- * 4. On message receipt, build the SubscribeJSON.
- * 5. Send it on message open.
+ * 4. Build the SubscribeJSON.
+ * 5. Send it on message type open.
  * 6. On message receipt, parse the JSON.
  *    6a. Build a shorter JSON of only the pieces we care for at the moment.
  *    6b. Break it into a string.
@@ -113,16 +113,6 @@ void StartServer() {
  * 9. Send the SubscribeJSON.
  * 10. On message close, close the WebSocket.
  *
- * TODO: Build SubscribeJSON outside of the message callback loop. Probably
- * ineffecient as it stands.
- *
- * TODO: Find a way to send a JSON object that's accepted without "officially"
- * building one...maybe. Afterall, it just gets dumped back into a string. You
- * can check the definition of dump() to confirm this.
- *
- * TODO: Find a way to parse the received JSON directly into the Outbound string
- * without building an intermediary JSON.
- *
  * TODO: Consider if there is a smarter way to wait. If so, implement it.
  * Current method is probably an anti-pattern.
  */
@@ -131,42 +121,42 @@ void ConnectToWebSocket(const string &coin) {
   Socket->setUrl("wss://ws-api.binance.us:9443/ws-api/v3");
   int ID = rand();
 
-  Socket->setOnMessageCallback(
-      [S = Socket.get(), Coin = coin, ID = ID](const MessagePtr &msg) {
-        json SubscribeJSON;
-        SubscribeJSON["id"] = ID;
-        SubscribeJSON["method"] = "avgPrice";
-        SubscribeJSON["params"]["symbol"] = Coin;
+  json SubscribeJSON;
+  SubscribeJSON["id"] = ID;
+  SubscribeJSON["method"] = "avgPrice";
+  SubscribeJSON["params"]["symbol"] = coin;
 
-        if (msg->type == MessageType::Message) {
-          json Received = json::parse(msg->str);
+  Socket->setOnMessageCallback([S = Socket.get(), SubscribeJSON = SubscribeJSON,
+                                Coin = coin](const MessagePtr &msg) {
+    if (msg->type == MessageType::Message) {
+      json Received = json::parse(msg->str);
 
-          json Shortened;
-          Shortened["id"] = Received["id"];
-          Shortened["coin"] = Coin;
-          Shortened["price"] = Received["result"]["price"];
-          string Outbound = Shortened.dump(0);
+      json Shortened;
+      Shortened["id"] = Received["id"];
+      Shortened["coin"] = Coin;
+      Shortened["price"] = Received["result"]["price"];
+      string Outbound = Shortened.dump(0);
 
-          for (auto &&client : Server.getClients()) {
-            client->send(Outbound);
-          }
+      for (auto &&client : Server.getClients()) {
+        client->send(Outbound);
+      }
 
-          if (DEBUG) {
-            PrintLocker.lock();
-            cout << "SubscribeJSON:\n" << SubscribeJSON.dump(2) << "\n" << endl;
-            cout << "Received:\n" << Received.dump(2) << "\n" << endl;
-            cout << "Sent to client:\n" << Outbound << "\n" << endl;
-            cout << "----------------------------------------" << endl;
-            PrintLocker.unlock();
-          }
-          this_thread::sleep_for(chrono::milliseconds(4000));
-          S->send(SubscribeJSON.dump(2));
-        } else if (msg->type == MessageType::Open) {
-          S->send(SubscribeJSON.dump(2));
-        } else if (msg->type == MessageType::Close) {
-          S->close();
-        }
-      });
+      if (DEBUG) {
+        PrintLocker.lock();
+        cout << "SubscribeJSON:\n" << SubscribeJSON.dump(2) << "\n" << endl;
+        cout << "Received:\n" << Received.dump(2) << "\n" << endl;
+        cout << "Sent to client:\n" << Outbound << "\n" << endl;
+        cout << "----------------------------------------" << endl;
+        PrintLocker.unlock();
+      }
+      this_thread::sleep_for(chrono::milliseconds(4000));
+      S->send(SubscribeJSON.dump(2));
+    } else if (msg->type == MessageType::Open) {
+      S->send(SubscribeJSON.dump(2));
+    } else if (msg->type == MessageType::Close) {
+      S->close();
+    }
+  });
 
   Socket->start();
   // Push the socket onto the global vector, so it's not killed.
