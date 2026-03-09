@@ -3,27 +3,16 @@
  * The Simple Trade App
  *
  * Hunter William Poole
- * 2-24-2026
+ * 03-08-2026
  *
  * Binance_Websockets.cpp
  * This program spawns one WebSocket server to communicate with the front end,
- * and [x] client WebSockets to communicate with Binance for [x] number of
- * coins, as defined by command line arguments.
+ * and [x] WebSocket clients to communicate with Binance for [x] number of
+ * coins, as defined by command line arguments. Default coins are used if no
+ * arguments are passed in.
  *
- * Default coins are used if no arguments are passed in.
- *
- * The client WebSockets continuously poll Binance for current average price.
- * To do this, they must sent a JSON subscription message detailing the
- * information they want from Binance. Binance's WebSocket API will then send
- * back a JSON object with the requested information. The client WebSocket will
- * parse this information into a JSON object, and collect the data the frontend
- * will need. Then, this JSON object is dumped to the connected client
- * (frontend).
- *
- * To avoid rate limits, the client then sleeps for 4000 milliseconds.
- * This seems to be the optimal time to sleep, since the average price is,
- * afterall, an average over time. It is not likely to change within those 4000
- * milliseconds.
+ * Will subscribe to the Candestick Data Stream from Binance. Then, prunes the
+ * response for relevant information to send off to the front end.
  */
 
 // Minimum necessary includes
@@ -86,65 +75,41 @@ void StartServer() {
 
 /* void ConnectToWebSocket(const string &coin)
  *
- * This function creates a unique WebSocket using `&coin`.
- * It uses rand() to create an ID to identify each WebSocket by its JSON
- * objects. ID will be used in SubscribeJSON, and Binance will send it back with
- * each reply. Since we know what coin we are creating the socket for, and we
- * have associated a unique ID with that, we are able to identify what coin
- * Binance is sending information about.
+ * This function creates the client WebSocket connection to Binance's WS Stream
+ * API, and determines the behavior on message receipt.
  *
- * For the message callback behavior:
- * The currently used Binance API is a "send-on-request" API. So, we have to
- * poll it continuously. As such, we send a message on a delay after we are done
- * processing the last message. We wait 4000 milliseconds to avoid rate limits.
+ * Currently, it connects to Binance's Candlestick Data Stream for a 1 minute
+ * interval. It will cull extra information from the received JSON, and send
+ * only what is currently necessary to the front.
  *
  * Steps, in order:
  * 1. Create a unique WebSocket pointer.
- * 2. Set its URL.
- * 3. Create a unique ID to identify the socket.
- * 4. On message receipt, build the SubscribeJSON.
- * 5. Send it on message open.
- * 6. On message receipt, parse the JSON.
- *    6a. Build a shorter JSON of only the pieces we care for at the moment.
- *    6b. Break it into a string.
- *    6c. Send it to each client connected to the server.
- * 7. Print JSON objects sent and received (if DEBUG)
- * 8. Sleep for 4000 milliseconds.
- * 9. Send the SubscribeJSON.
- * 10. On message close, close the WebSocket.
- *
- * TODO: Build SubscribeJSON outside of the message callback loop. Probably
- * ineffecient as it stands.
- *
- * TODO: Find a way to send a JSON object that's accepted without "officially"
- * building one...maybe. Afterall, it just gets dumped back into a string. You
- * can check the definition of dump() to confirm this.
- *
- * TODO: Find a way to parse the received JSON directly into the Outbound string
- * without building an intermediary JSON.
- *
- * TODO: Consider if there is a smarter way to wait. If so, implement it.
- * Current method is probably an anti-pattern.
+ * 2. Set its URL from &coin.
+ * 3. On message receipt, parse the JSON.
+ *    3a. Build a shorter JSON of only the pieces we care for at the moment.
+ *    3b. Break it into a string.
+ *    3c. Send it to each client connected to the server.
+ * 4. Print JSON objects sent and received (if DEBUG)
+ * 5. On message close, close the WebSocket.
  */
 void ConnectToWebSocket(const string &coin) {
   auto Socket = make_unique<WebSocket>();
-  Socket->setUrl("wss://ws-api.binance.us:9443/ws-api/v3");
-  int ID = rand();
+  string StreamUrl = "wss://stream.binance.us:9443/ws/" + coin + "@kline_1m";
+  cout << "Subscribed to: " << StreamUrl << endl;
+  Socket->setUrl(StreamUrl);
 
   Socket->setOnMessageCallback(
-      [S = Socket.get(), Coin = coin, ID = ID](const MessagePtr &msg) {
-        json SubscribeJSON;
-        SubscribeJSON["id"] = ID;
-        SubscribeJSON["method"] = "avgPrice";
-        SubscribeJSON["params"]["symbol"] = Coin;
-
+      [S = Socket.get(), Coin = coin](const MessagePtr &msg) {
         if (msg->type == MessageType::Message) {
           json Received = json::parse(msg->str);
 
           json Shortened;
-          Shortened["id"] = Received["id"];
-          Shortened["coin"] = Coin;
-          Shortened["price"] = Received["result"]["price"];
+          Shortened["TimeStamp"] = Received["E"];
+          Shortened["Coin"] = Received["s"];
+          Shortened["Kline"]["Open"] = Received["k"]["o"];
+          Shortened["Kline"]["Close"] = Received["k"]["c"];
+          Shortened["Kline"]["High"] = Received["k"]["h"];
+          Shortened["Kline"]["Low"] = Received["k"]["l"];
           string Outbound = Shortened.dump(0);
 
           for (auto &&client : Server.getClients()) {
@@ -153,16 +118,11 @@ void ConnectToWebSocket(const string &coin) {
 
           if (DEBUG) {
             PrintLocker.lock();
-            cout << "SubscribeJSON:\n" << SubscribeJSON.dump(2) << "\n" << endl;
             cout << "Received:\n" << Received.dump(2) << "\n" << endl;
             cout << "Sent to client:\n" << Outbound << "\n" << endl;
             cout << "----------------------------------------" << endl;
             PrintLocker.unlock();
           }
-          this_thread::sleep_for(chrono::milliseconds(4000));
-          S->send(SubscribeJSON.dump(2));
-        } else if (msg->type == MessageType::Open) {
-          S->send(SubscribeJSON.dump(2));
         } else if (msg->type == MessageType::Close) {
           S->close();
         }
@@ -192,12 +152,12 @@ int main(int argc, char *argv[]) {
   ix::initNetSystem();
 
   // Holds the names of coins.
-  // Also known as the <ticker>
+  // Also known as the <ticker> or <symbol>.
   vector<string> coins;
 
   // If no arguments are supplied, use the default coins.
   if (argc < 2) {
-    coins = {"BTCUSDT", "ETHUSDT", "ADAUSDT", "XRPUSDT", "DOTUSDT", "UNIUSDT"};
+    coins = {"btcusdt", "ethusdt", "adausdt", "xrpusdt", "dotusdt", "uniusdt"};
   } else {
     for (int i = 0; i < argc; i++) {
       string Argument = argv[i];
