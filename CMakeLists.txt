@@ -8,7 +8,7 @@
 # https://google.github.io/googletest/quickstart-cmake.html
 ###################################################################################################################
 
-cmake_minimum_required(VERSION 3.16)       # Updated to 3.10 for vcpkg toolchain support
+cmake_minimum_required(VERSION 3.24)       # 3.24 req'd for find and fetch logic.
 
 if(POLICY CMP0135)
   cmake_policy(SET CMP0135 NEW)
@@ -42,28 +42,6 @@ set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)  #
 include(FetchContent)
 include(GoogleTest)
 
-# Find ZLIB or MBedTLS on the system if they exist.
-# If not, fetch them and make them available.
-find_package(ZLIB REQUIRED)
-if(NOT ZLIB_FOUND)
-  FetchContent_Declare(
-  zlib
-  GIT_REPOSITORY https://github.com/madler/zlib.git
-  GIT_TAG v1.3.2
-  )
-  FetchContent_MakeAvailable(zlib)
-endif()
-
-find_package(MbedTLS REQUIRED)
-if(NOT MbedTLS_FOUND)
-  FetchContent_Declare(
-  mbedtls
-  GIT_REPOSITORY https://github.com/Mbed-TLS/mbedtls.git
-  GIT_TAG mbedtls-3.6.5
-  )
-  FetchContent_MakeAvailable(mbedtls)
-endif()
-
 #####################################################################################################################
 
 FetchContent_Declare(                       # Define the content to be fetched, and from where.
@@ -86,6 +64,20 @@ FetchContent_Declare(
 #  webview
 #  GIT_REPOSITORY https://github.com/webview/webview.git
 #)
+
+FetchContent_Declare(
+  zlib
+  GIT_REPOSITORY https://github.com/madler/zlib.git
+  GIT_TAG v1.3.2
+  FIND_PACKAGE_ARGS NAMES ZLIB              # Try to find ZLIB before fetching it.
+)
+
+FetchContent_Declare(
+  mbedtls
+  GIT_REPOSITORY https://github.com/Mbed-TLS/mbedtls.git
+  GIT_TAG mbedtls-3.6.5
+  FIND_PACKAGE_ARGS NAMES MBedTLS           # Try to find MBedTLS before fetching it.
+)
 
 FetchContent_MakeAvailable(ixwebsocket)     # Fetch ixwebsocket.
 FetchContent_MakeAvailable(json)            # Fetch nlohmann_json.
