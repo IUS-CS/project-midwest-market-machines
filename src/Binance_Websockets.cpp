@@ -3,27 +3,16 @@
  * The Simple Trade App
  *
  * Hunter William Poole
- * 2-24-2026
+ * 03-08-2026
  *
  * Binance_Websockets.cpp
  * This program spawns one WebSocket server to communicate with the front end,
- * and [x] client WebSockets to communicate with Binance for [x] number of
- * coins, as defined by command line arguments.
+ * and [x] WebSocket clients to communicate with Binance for [x] number of
+ * coins, as defined by command line arguments. Default coins are used if no
+ * arguments are passed in.
  *
- * Default coins are used if no arguments are passed in.
- *
- * The client WebSockets continuously poll Binance for current average price.
- * To do this, they must sent a JSON subscription message detailing the
- * information they want from Binance. Binance's WebSocket API will then send
- * back a JSON object with the requested information. The client WebSocket will
- * parse this information into a JSON object, and collect the data the frontend
- * will need. Then, this JSON object is dumped to the connected client
- * (frontend).
- *
- * To avoid rate limits, the client then sleeps for 4000 milliseconds.
- * This seems to be the optimal time to sleep, since the average price is,
- * afterall, an average over time. It is not likely to change within those 4000
- * milliseconds.
+ * Will subscribe to the Candestick Data Stream from Binance. Then, prunes the
+ * response for relevant information to send off to the front end.
  */
 
 // Minimum necessary includes
@@ -89,6 +78,10 @@ void StartServer() {
  * This function creates the client WebSocket connection to Binance's WS Stream
  * API, and determines the behavior on message receipt.
  *
+ * Currently, it conencts to Binance's Candlestick Data Stream for a 1 minute
+ * interval. It will cull extra information from the received JSON, and send
+ * only what is currently necessary to the front.
+ *
  * Steps, in order:
  * 1. Create a unique WebSocket pointer.
  * 2. Set its URL from &coin.
@@ -113,8 +106,6 @@ void ConnectToWebSocket(const string &coin) {
           json Shortened;
           Shortened["TimeStamp"] = Received["E"];
           Shortened["Coin"] = Received["s"];
-          // Shortened["Kline"]["StartTime"] = Received["k"]["t"];
-          // Shortened["Kline"]["StopTime"] = Received["k"]["T"];
           Shortened["Kline"]["Open"] = Received["k"]["o"];
           Shortened["Kline"]["Close"] = Received["k"]["c"];
           Shortened["Kline"]["High"] = Received["k"]["h"];
@@ -161,7 +152,7 @@ int main(int argc, char *argv[]) {
   ix::initNetSystem();
 
   // Holds the names of coins.
-  // Also known as the <ticker>
+  // Also known as the <ticker> or <symbol>.
   vector<string> coins;
 
   // If no arguments are supplied, use the default coins.
