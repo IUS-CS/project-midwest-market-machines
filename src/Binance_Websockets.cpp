@@ -85,20 +85,19 @@ void StartServer() {
 }
 
 /* void ConnectToWebSocket(const string &coin)
- * TODO: Update this description
+ *
+ * This function creates the client WebSocket connection to Binance's WS Stream
+ * API, and determines the behavior on message receipt.
  *
  * Steps, in order:
  * 1. Create a unique WebSocket pointer.
- * 2. Set its URL from &coin data.
+ * 2. Set its URL from &coin.
  * 3. On message receipt, parse the JSON.
  *    3a. Build a shorter JSON of only the pieces we care for at the moment.
  *    3b. Break it into a string.
  *    3c. Send it to each client connected to the server.
  * 4. Print JSON objects sent and received (if DEBUG)
  * 5. On message close, close the WebSocket.
- *
- * TODO: Consider if there is a smarter way to wait. If so, implement it.
- * Current method is probably an anti-pattern.
  */
 void ConnectToWebSocket(const string &coin) {
   auto Socket = make_unique<WebSocket>();
@@ -111,23 +110,25 @@ void ConnectToWebSocket(const string &coin) {
         if (msg->type == MessageType::Message) {
           json Received = json::parse(msg->str);
 
-          /*
           json Shortened;
-          Shortened["id"] = Received["id"];
-          Shortened["coin"] = Coin;
-          Shortened["price"] = Received["result"]["price"];
+          Shortened["TimeStamp"] = Received["E"];
+          Shortened["Coin"] = Received["s"];
+          // Shortened["Kline"]["StartTime"] = Received["k"]["t"];
+          // Shortened["Kline"]["StopTime"] = Received["k"]["T"];
+          Shortened["Kline"]["Open"] = Received["k"]["o"];
+          Shortened["Kline"]["Close"] = Received["k"]["c"];
+          Shortened["Kline"]["High"] = Received["k"]["h"];
+          Shortened["Kline"]["Low"] = Received["k"]["l"];
           string Outbound = Shortened.dump(0);
-
 
           for (auto &&client : Server.getClients()) {
             client->send(Outbound);
           }
-          */
 
           if (DEBUG) {
             PrintLocker.lock();
             cout << "Received:\n" << Received.dump(2) << "\n" << endl;
-            // cout << "Sent to client:\n" << Outbound << "\n" << endl;
+            cout << "Sent to client:\n" << Outbound << "\n" << endl;
             cout << "----------------------------------------" << endl;
             PrintLocker.unlock();
           }
