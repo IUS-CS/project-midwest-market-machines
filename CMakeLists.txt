@@ -8,42 +8,61 @@
 # https://google.github.io/googletest/quickstart-cmake.html
 ###################################################################################################################
 
-cmake_minimum_required(VERSION 3.10)       # Updated to 3.10 for vcpkg toolchain support
+cmake_minimum_required(VERSION 3.16)       # Updated to 3.10 for vcpkg toolchain support
+
 if(POLICY CMP0135)
   cmake_policy(SET CMP0135 NEW)
 endif()
 
-if(WIN32)
-# Auto vcpkg setup: clones, bootstraps, needs to load before project() call
-set(VCPKG_ROOT "${CMAKE_SOURCE_DIR}/vcpkg")
-if(NOT EXISTS "${VCPKG_ROOT}")
-    execute_process(COMMAND git clone https://github.com/microsoft/vcpkg.git "${VCPKG_ROOT}")
-    execute_process(COMMAND "${VCPKG_ROOT}/bootstrap-vcpkg.bat" WORKING_DIRECTORY "${VCPKG_ROOT}")
-endif()
+#if(WIN32)
+#  # Auto vcpkg setup: clones, bootstraps, needs to load before project() call
+#  set(VCPKG_ROOT "${CMAKE_SOURCE_DIR}/vcpkg")
+#  if(NOT EXISTS "${VCPKG_ROOT}")
+#    execute_process(COMMAND git clone https://github.com/microsoft/vcpkg.git "${VCPKG_ROOT}")
+#    execute_process(COMMAND "${VCPKG_ROOT}/bootstrap-vcpkg.bat" WORKING_DIRECTORY "${VCPKG_ROOT}")
+#  endif()
 
-set(CMAKE_TOOLCHAIN_FILE "${VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake" CACHE STRING "" FORCE)
-execute_process(COMMAND "${VCPKG_ROOT}/vcpkg" install zlib mbedtls)
-endif()
-enable_testing()
+#  set(CMAKE_TOOLCHAIN_FILE "${VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake" CACHE STRING "" FORCE)
+#  execute_process(COMMAND "${VCPKG_ROOT}/vcpkg" install zlib mbedtls)
+#endif()
 
 project(Binance_Websockets)                # Specify the project's name. Append `.exe` if needed.
 
 ###################################################################################################################
-set(CMAKE_CXX_STANDARD 17)                  # Set C++17 as minimum required C++ version.
-set(CMAKE_CXX_STANDARD_REQUIRED ON)         # Enforce this minimum C++17 requirement.
-set(CMAKE_EXPORT_COMPILE_COMMANDS on)       # Export a list of compile commands to make clang shut up about errors.
+set(CMAKE_CXX_STANDARD 17)                          # Set C++17 as minimum required C++ version.
+set(CMAKE_CXX_STANDARD_REQUIRED ON)                 # Enforce this minimum C++17 requirement.
+set(CMAKE_EXPORT_COMPILE_COMMANDS on)               # Export a list of compile commands to make clang shut up about errors.
+set(ZLIB_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)    # Don't build examples for zlib.
+set(ENABLE_TESTING OFF CACHE BOOL "" FORCE)         # Don't build tests included in dependency repositories.
+set(ENABLE_PROGRAMS OFF CACHE BOOL "" FORCE)        # Don't build programs.
+set(USE_TLS ON CACHE BOOL "" FORCE)                 # TLS required for WebSockets.
+set(USE_MBEDTLS ON CACHE BOOL "" FORCE)             # 
+set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)  #
 
-# Find the vcpkg-installed libraries.
+include(FetchContent)
+include(GoogleTest)
+
+# Find ZLIB or MBedTLS on the system if they exist.
+# If not, fetch them and make them available.
 find_package(ZLIB REQUIRED)
+if(NOT ZLIB_FOUND)
+  FetchContent_Declare(
+  zlib
+  GIT_REPOSITORY https://github.com/madler/zlib.git
+  GIT_TAG v1.3.2
+  )
+  FetchContent_MakeAvailable(zlib)
+endif()
+
 find_package(MbedTLS REQUIRED)
-
-include(FetchContent)                       # Include the FetchContent CMake module.
-include(GoogleTest)                         # Include GoogleTest.
-
-# Configure IXWebSocket for TLS (required for Binance connection).
-set(USE_TLS ON CACHE BOOL "" FORCE)
-set(USE_MBEDTLS ON CACHE BOOL "" FORCE)
-set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+if(NOT MbedTLS_FOUND)
+  FetchContent_Declare(
+  mbedtls
+  GIT_REPOSITORY https://github.com/Mbed-TLS/mbedtls.git
+  GIT_TAG mbedtls-3.6.5
+  )
+  FetchContent_MakeAvailable(mbedtls)
+endif()
 
 #####################################################################################################################
 
@@ -59,13 +78,19 @@ FetchContent_Declare(
 
 FetchContent_Declare(
   googletest
-  URL https://github.com/google/googletest/archive/73a63ea05dc8ca29ec1d2c1d66481dd0de1950f1.zip
+  GIT_REPOSITORY https://github.com/google/googletest.git
+  GIT_TAG v1.17.0
 )
+
+#FetchContent_Declare(
+#  webview
+#  GIT_REPOSITORY https://github.com/webview/webview.git
+#)
 
 FetchContent_MakeAvailable(ixwebsocket)     # Fetch ixwebsocket.
 FetchContent_MakeAvailable(json)            # Fetch nlohmann_json.
-FetchContent_MakeAvailable(googletest)      # Fetch GoogleTest.
-
+FetchContent_MakeAvailable(googletest)      # Fetch googletestt.
+#FetchContent_MakeAvailable(webview)         # Fetch webview.
 #####################################################################################################################
 
 if(WIN32)
@@ -81,7 +106,8 @@ target_link_libraries(
   Binance_Websockets
   PRIVATE nlohmann_json::nlohmann_json
   ixwebsocket
-)                                          # link <project> with <library> <library>
+#  webview
+)                                           # link <project> with <library> <library>
 
 add_executable(
   Risk_Analyzer
