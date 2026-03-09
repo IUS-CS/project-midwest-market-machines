@@ -13,13 +13,18 @@
  *
  * Will subscribe to the Candestick Data Stream from Binance. Then, prunes the
  * response for relevant information to send off to the front end.
+ *
+ * TODO: Investigate structs for nlohmann/json to auto serialize into JSON w/o
+ * manual mapping.
  */
 
 // Minimum necessary includes
+#include "webview.h"
 #include <chrono>
 #include <iostream>
 #include <ixwebsocket/IXWebSocketServer.h>
 #include <nlohmann/json.hpp>
+#include <thread>
 
 //  Quality of life statements. All are unneccessary, strictly speaking.
 using json = nlohmann::json;

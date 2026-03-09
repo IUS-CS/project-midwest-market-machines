@@ -60,10 +60,10 @@ FetchContent_Declare(
   GIT_TAG v1.17.0
 )
 
-#FetchContent_Declare(
-#  webview
-#  GIT_REPOSITORY https://github.com/webview/webview.git
-#)
+FetchContent_Declare(
+  webview
+  GIT_REPOSITORY https://github.com/webview/webview.git
+)
 
 FetchContent_Declare(
   zlib
@@ -98,7 +98,7 @@ target_link_libraries(
   Binance_Websockets
   PRIVATE nlohmann_json::nlohmann_json
   ixwebsocket
-#  webview
+  webview
 )                                           # link <project> with <library> <library>
 
 add_executable(
