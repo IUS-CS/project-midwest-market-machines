@@ -10,6 +10,9 @@ const Watchlist = ({ onCoin, currentCoin }) => {
       <nav className="watchlist">
         <h2>My Watchlist</h2>
         <ul>
+          {/* Maps through the coins array to generate a clickable list item dynamically for each coin. 
+          Logic could be extended or merged to generate new coin charts.
+          */}
           {coins.map((coin) => (
             <li
               key={coin}
@@ -17,6 +20,7 @@ const Watchlist = ({ onCoin, currentCoin }) => {
               onClick={() => onCoin(coin)}
               style={{ cursor: 'pointer' }}
             >
+              {/* Removes the 'USDT' suffix for cleaner display in the watchlist */}
               {coin.replace('USDT', '')}
             </li>
           ))}
