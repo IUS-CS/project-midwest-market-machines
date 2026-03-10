@@ -14,17 +14,17 @@ if(POLICY CMP0135)
   cmake_policy(SET CMP0135 NEW)
 endif()
 
-#if(WIN32)
-#  # Auto vcpkg setup: clones, bootstraps, needs to load before project() call
-#  set(VCPKG_ROOT "${CMAKE_SOURCE_DIR}/vcpkg")
-#  if(NOT EXISTS "${VCPKG_ROOT}")
-#    execute_process(COMMAND git clone https://github.com/microsoft/vcpkg.git "${VCPKG_ROOT}")
-#    execute_process(COMMAND "${VCPKG_ROOT}/bootstrap-vcpkg.bat" WORKING_DIRECTORY "${VCPKG_ROOT}")
-#  endif()
+if(WIN32)
+  # Auto vcpkg setup: clones, bootstraps, needs to load before project() call
+  set(VCPKG_ROOT "${CMAKE_SOURCE_DIR}/vcpkg")
+  if(NOT EXISTS "${VCPKG_ROOT}")
+    execute_process(COMMAND git clone https://github.com/microsoft/vcpkg.git "${VCPKG_ROOT}")
+    execute_process(COMMAND "${VCPKG_ROOT}/bootstrap-vcpkg.bat" WORKING_DIRECTORY "${VCPKG_ROOT}")
+  endif()
 
-#  set(CMAKE_TOOLCHAIN_FILE "${VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake" CACHE STRING "" FORCE)
-#  execute_process(COMMAND "${VCPKG_ROOT}/vcpkg" install zlib mbedtls)
-#endif()
+  set(CMAKE_TOOLCHAIN_FILE "${VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake" CACHE STRING "" FORCE)
+  execute_process(COMMAND "${VCPKG_ROOT}/vcpkg" install zlib mbedtls)
+endif()
 
 project(Binance_Websockets)                # Specify the project's name. Append `.exe` if needed.
 
@@ -79,6 +79,8 @@ FetchContent_Declare(
   FIND_PACKAGE_ARGS NAMES MBedTLS           # Try to find MBedTLS before fetching it.
 )
 
+FetchContent_MakeAvailable(zlib)            # Fetch zlib.
+FetchContent_MakeAvailable(mbedtls)         # Fetch mbedtls.
 FetchContent_MakeAvailable(ixwebsocket)     # Fetch ixwebsocket.
 FetchContent_MakeAvailable(json)            # Fetch nlohmann_json.
 FetchContent_MakeAvailable(googletest)      # Fetch googletestt.
