@@ -63,3 +63,56 @@ body {
   text-align: center;
   margin: 2rem;
 }
+
+/* About Page */
+.about {
+  text-align: center;
+}
+/* Contact Page */
+.contact {
+  text-align: center;
+  width: 400px;
+  margin: 0 auto;
+}
+/* Contact Form Window */
+.contact-form-box {
+  width: 90%;
+  max-width: 450px;
+  margin: 30px auto;
+  padding: 25px;
+
+  background: #111827;
+  border-radius: 12px;
+
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+/* Contact Form Window and Text Area */
+.contact-form-box input,
+.contact-form-box textarea {
+  width: 100%;
+  padding: 12px;
+  border: 2px solid rgb(0, 0, 0);
+  border-radius: 8px;
+  background-color: white;
+  color: black;
+  font-size: 1rem;
+  box-sizing: border-box;
+}
+/* self explanatory block */
+.contact-form-box textarea {
+  resize: vertical;
+  min-height: 120px;
+}
+/* Contact Submit Button */
+.contact-form-box button {
+  padding: 12px;
+  border: none;
+  border-radius: 8px;
+  background-color: #1a2f57;
+  color: white;
+  font-weight: bold;
+  cursor: pointer;
+  box-sizing: border-box;
+}
