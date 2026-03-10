@@ -51,12 +51,12 @@ nmake
 cmake -S . -B build/                          # Set ./build/ as the build diretory, and build to it.
 cd build/
 make                                          # Make Binance_Websockets.cpp and other files.
-./Binance_Websockets.exe          # Run the backend.
+./Binance_Websockets.exe                      # Run the application.
 ```
 
 > [!TIP]
 > You may get an error after running `npm install --legacy-peer-deps`, but it can be safely ignored.
->
+
 ## Testing
 
 For the frontend, navigate to `Midwest Market Machines/MarketUI/` and run `npm test`.
