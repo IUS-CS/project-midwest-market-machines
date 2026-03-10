@@ -14,12 +14,11 @@
  * Will subscribe to the Candestick Data Stream from Binance. Then, prunes the
  * response for relevant information to send off to the front end.
  *
- * TODO: Investigate structs for nlohmann/json to auto serialize into JSON w/o
- * manual mapping.
  */
 
 // Minimum necessary includes
 #include "nlohmann/detail/macro_scope.hpp"
+#include "webview/types.h"
 #include "webview/webview.h"
 #include <chrono>
 #include <iostream>
@@ -33,6 +32,7 @@ using MessageType = ix::WebSocketMessageType;
 using WebSocket = ix::WebSocket;
 using WebSocketServer = ix::WebSocketServer;
 using MessagePtr = ix::WebSocketMessagePtr;
+using WebView = webview::webview;
 using namespace std;
 
 //-------------------Global Constants-----------------------
@@ -132,6 +132,7 @@ void ConnectToWebSocket(const string &coin) {
           OutboundMessage.Kline.Close = Received["k"]["c"];
           OutboundMessage.Kline.High = Received["k"]["h"];
           OutboundMessage.Kline.Low = Received["k"]["l"];
+
           json Shortened = OutboundMessage;
           string OutboundString = Shortened.dump(0);
 
@@ -164,11 +165,6 @@ void ConnectToWebSocket(const string &coin) {
  *
  * Currently, it takes no major ownership or control of the threads that are
  * spawned for the WebSockets and the Server.
- *
- * TODO: Find an implement a better thread control mechanism.
- *
- * TODO: Get rid of the while(true) loop with a wait in in.
- * Have to find a better way to keep main alive while threads are running.
  */
 int main(int argc, char *argv[]) {
   // Required for Windows.
@@ -198,6 +194,14 @@ int main(int argc, char *argv[]) {
     }
   });
 
+  WebView Window(true, nullptr);
+  Window.set_title("Simple Trade");
+  Window.set_size(1200, 800, WEBVIEW_HINT_NONE);
+  Window.navigate("http://localhost:5173");
+
+  Window.run();
+
+  Server.stop();
   ServerThread.join();
   ClientThread.join();
 
