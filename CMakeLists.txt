@@ -82,7 +82,7 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(ixwebsocket)     # Fetch ixwebsocket.
 FetchContent_MakeAvailable(json)            # Fetch nlohmann_json.
 FetchContent_MakeAvailable(googletest)      # Fetch googletestt.
-#FetchContent_MakeAvailable(webview)         # Fetch webview.
+FetchContent_MakeAvailable(webview)         # Fetch webview.
 #####################################################################################################################
 
 if(WIN32)
@@ -98,7 +98,7 @@ target_link_libraries(
   Binance_Websockets
   PRIVATE nlohmann_json::nlohmann_json
   ixwebsocket
-  webview
+  webview::core
 )                                           # link <project> with <library> <library>
 
 add_executable(
