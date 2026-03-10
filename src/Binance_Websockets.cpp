@@ -19,6 +19,7 @@
  */
 
 // Minimum necessary includes
+#include "BinanceProcessor.h"
 #include "webview/webview.h"
 #include <filesystem>
 #include <iostream>
@@ -49,41 +50,7 @@ WebSocketServer Server(8080, "127.0.0.1");
 vector<unique_ptr<WebSocket>> SocketsVector;
 // Just for printing during DEBUG.
 mutex PrintLocker;
-//-------------------JSON Structs---------------------------
-
-/* These two structs are used to define the shape of the JSON object we want to
- * create from Binance's response.
- *
- * We create struct KlineData to select, well, the KlineData, and struct
- * OutboundJSONStruct to hold the actual JSON we'd like to send out to the
- * frontend.
- *
- * Defining the shape here allows us to change the shape of the JSON object
- * globally without hunting down the specific lines of code in the client or
- * server.
- *
- * Likely to be more useful later than they are now.
- */
-struct KlineData {
-  string Open;
-  string Close;
-  string High;
-  string Low;
-};
-
-struct OutboundJSONStruct {
-  uint64_t TimeStamp;
-  string Coin;
-  KlineData Kline;
-};
-
-/* These lines tell nlohmann/json to define KlineData and OutboundJSONStruct as
- *  types.
- *
- *  Should be <type_you_want>, <member_1>, <member_2>, ..., <member_n>
- */
-NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(KlineData, Open, Close, High, Low);
-NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(OutboundJSONStruct, TimeStamp, Coin, Kline);
+//----------------------------------------------------------
 
 /* void StartServer()
  *
@@ -132,15 +99,7 @@ void ConnectToWebSocket(const string &coin) {
         if (msg->type == MessageType::Message) {
           json Received = json::parse(msg->str);
 
-          OutboundJSONStruct OutboundMessage;
-          OutboundMessage.TimeStamp = Received["E"];
-          OutboundMessage.Coin = Received["s"];
-          OutboundMessage.Kline.Open = Received["k"]["o"];
-          OutboundMessage.Kline.Close = Received["k"]["c"];
-          OutboundMessage.Kline.High = Received["k"]["h"];
-          OutboundMessage.Kline.Low = Received["k"]["l"];
-
-          json Shortened = OutboundMessage;
+          json Shortened = BinanceProcessor::toSimpleKline(Received);
           string OutboundString = Shortened.dump(0);
 
           for (auto &&client : Server.getClients()) {
