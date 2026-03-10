@@ -1,10 +1,15 @@
+/*Text box to update price display.
+ Could be repurposed, expanded, merged, with livechart component, 
+  to achieve this, it would have to be a dynamically built component built like the coins.map((coin) => ...)
+   function in watchlist.jsx
+ */
 .ShowPrice-wrapper-div {
   display: block;
   width: 300px;
   padding: 1rem;
   background-color: #282c34;
 }
-
+/* ShowPrice component styling, uses space-between to align text and price numbers */
 .ShowPrice {
   display: flex;
   width: 280px;

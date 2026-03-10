@@ -1,3 +1,6 @@
+/*  
+Root container styling, ensures the app takes up the full width of the viewport and removes default margins and padding.
+*/
 #root {
   max-width: none;
   width: 100%;
@@ -5,20 +8,25 @@
   padding: 0;
   text-align: left;
 }
-
+/*
+Styling for when a logo image is added 
+Logo animation and styling, currently not used in the app, image should be added to navbar in navbar.jsx 
+*/
 .logo {
   height: 6em;
   padding: 1.5em;
-  will-change: filter;
+  will-change: filter; /*Browser animation preloading hint for performance*/
   transition: filter 300ms;
 }
+/* Glow/Shadow effect behind the logo */
 .logo:hover {
   filter: drop-shadow(0 0 2em #646cffaa);
 }
+/* Style for React elements */
 .logo.react:hover {
   filter: drop-shadow(0 0 2em #61dafbaa);
 }
-
+/* Keyframes for logo spinning animation, currently not used in the app */
 @keyframes logo-spin {
   from {
     transform: rotate(0deg);
@@ -27,26 +35,30 @@
     transform: rotate(360deg);
   }
 }
-
+/* Animation trigger and timing*/
 @media (prefers-reduced-motion: no-preference) {
   a:nth-of-type(2) .logo {
     animation: logo-spin infinite 20s linear;
   }
+
+
 }
+/*Main body container and alignment, stacks navbar at top*/
 body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol';
   background-color: #282c34;
-  color: white;
-  min-height: 100vh;
-  display: flex;
+  color: white; /* Default text color */
+  min-height: 100vh; /* Ensures the body takes up the full viewport height */
+  display: flex; 
   flex-direction: column;   /* navbar on top */
   align-items: stretch;
   justify-content: flex-start;
 }
+/* Interior card component styling, used for content sections like show price and watchlist */
 .card {
   padding: 2em;
 }
-
+/* App header styling, self explanatory block*/
   .App_header {
   text-align: center;
   margin: 2rem;

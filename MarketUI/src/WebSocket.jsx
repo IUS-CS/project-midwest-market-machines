@@ -1,6 +1,9 @@
 import useWebSocket, { ReadyState } from 'react-use-websocket';
 import { useState } from 'react';
 
+/* 
+Backend websocket connection.
+*/
 const WebSocket = (selectedCoin) => {
   const [price, setPrice] = useState(0);
   const SOCKET_URL = "ws://127.0.0.1:8080";
@@ -16,11 +19,13 @@ const WebSocket = (selectedCoin) => {
     onOpen: () => console.log('WebSocket opened'),
     onClose: () => console.log('WebSocket closed'),
     onMessage: (event) => {
+      /* JSON parsing, console logging, and string interpretation*/
       console.log('JSON received', event.data);
       const JSONData = JSON.parse(event.data);
       const coin = JSONData["coin"];
       const price = JSONData["price"];
       console.log(coin + ": $" + price);
+      /* Filter logic to listen to changes in only selected coin*/
       if (coin === selectedCoin) {
         setPrice(price);
       }

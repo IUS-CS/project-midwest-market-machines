@@ -83,7 +83,7 @@ void StartServer() {
  * This function creates the client WebSocket connection to Binance's WS Stream
  * API, and determines the behavior on message receipt.
  *
- * Currently, it conencts to Binance's Candlestick Data Stream for a 1 minute
+ * Currently, it connects to Binance's Candlestick Data Stream for a 1 minute
  * interval. It will cull extra information from the received JSON, and send
  * only what is currently necessary to the front.
  *
