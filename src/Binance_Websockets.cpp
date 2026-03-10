@@ -19,6 +19,7 @@
  */
 
 // Minimum necessary includes
+#include "nlohmann/detail/macro_scope.hpp"
 #include "webview/webview.h"
 #include <chrono>
 #include <iostream>
@@ -49,6 +50,22 @@ vector<unique_ptr<WebSocket>> SocketsVector;
 // Just for printing during DEBUG.
 mutex PrintLocker;
 //----------------------------------------------------------
+
+struct KlineData {
+  string Open;
+  string Close;
+  string High;
+  string Low;
+};
+
+struct OutboundJSONStruct {
+  uint64_t TimeStamp;
+  string Coin;
+  KlineData Kline;
+};
+
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(KlineData, Open, Close, High, Low);
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(OutboundJSONStruct, TimeStamp, Coin, Kline);
 
 /* void StartServer()
  *
@@ -108,23 +125,24 @@ void ConnectToWebSocket(const string &coin) {
         if (msg->type == MessageType::Message) {
           json Received = json::parse(msg->str);
 
-          json Shortened;
-          Shortened["TimeStamp"] = Received["E"];
-          Shortened["Coin"] = Received["s"];
-          Shortened["Kline"]["Open"] = Received["k"]["o"];
-          Shortened["Kline"]["Close"] = Received["k"]["c"];
-          Shortened["Kline"]["High"] = Received["k"]["h"];
-          Shortened["Kline"]["Low"] = Received["k"]["l"];
-          string Outbound = Shortened.dump(0);
+          OutboundJSONStruct OutboundMessage;
+          OutboundMessage.TimeStamp = Received["E"];
+          OutboundMessage.Coin = Received["s"];
+          OutboundMessage.Kline.Open = Received["k"]["o"];
+          OutboundMessage.Kline.Close = Received["k"]["c"];
+          OutboundMessage.Kline.High = Received["k"]["h"];
+          OutboundMessage.Kline.Low = Received["k"]["l"];
+          json Shortened = OutboundMessage;
+          string OutboundString = Shortened.dump(0);
 
           for (auto &&client : Server.getClients()) {
-            client->send(Outbound);
+            client->send(OutboundString);
           }
 
           if (DEBUG) {
             PrintLocker.lock();
             cout << "Received:\n" << Received.dump(2) << "\n" << endl;
-            cout << "Sent to client:\n" << Outbound << "\n" << endl;
+            cout << "Sent to client:\n" << OutboundString << "\n" << endl;
             cout << "----------------------------------------" << endl;
             PrintLocker.unlock();
           }
