@@ -19,7 +19,7 @@
  */
 
 // Minimum necessary includes
-#include "webview.h"
+#include "webview/webview.h"
 #include <chrono>
 #include <iostream>
 #include <ixwebsocket/IXWebSocketServer.h>
@@ -171,19 +171,17 @@ int main(int argc, char *argv[]) {
   }
 
   // Spawn the server. See above.
-  StartServer();
+  thread ServerThread(StartServer);
 
   // For each coin, spawn a WebSocket.
-  for (const string &coin : coins) {
-    ConnectToWebSocket(coin);
-  }
+  thread ClientThread([&coins]() {
+    for (const string &coin : coins) {
+      ConnectToWebSocket(coin);
+    }
+  });
 
-  // A genuinely terrible way to make sure main doesn't end while the WebSockets
-  // are running.
-  while (true) {
-    this_thread::sleep_for(chrono::nanoseconds(1));
-    // Now I am become Sleep, the destroyer of useful CPU time.
-  }
+  ServerThread.join();
+  ClientThread.join();
 
   return 0;
 }
