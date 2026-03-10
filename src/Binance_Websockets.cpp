@@ -6,6 +6,7 @@
  * 03-08-2026
  *
  * Binance_Websockets.cpp
+ *
  * This program spawns one WebSocket server to communicate with the front end,
  * and [x] WebSocket clients to communicate with Binance for [x] number of
  * coins, as defined by command line arguments. Default coins are used if no
@@ -14,11 +15,10 @@
  * Will subscribe to the Candestick Data Stream from Binance. Then, prunes the
  * response for relevant information to send off to the front end.
  *
+ * The server
  */
 
 // Minimum necessary includes
-#include "nlohmann/detail/macro_scope.hpp"
-#include "webview/types.h"
 #include "webview/webview.h"
 #include <filesystem>
 #include <iostream>
@@ -49,8 +49,21 @@ WebSocketServer Server(8080, "127.0.0.1");
 vector<unique_ptr<WebSocket>> SocketsVector;
 // Just for printing during DEBUG.
 mutex PrintLocker;
-//----------------------------------------------------------
+//-------------------JSON Structs---------------------------
 
+/* These two structs are used to define the shape of the JSON object we want to
+ * create from Binance's response.
+ *
+ * We create struct KlineData to select, well, the KlineData, and struct
+ * OutboundJSONStruct to hold the actual JSON we'd like to send out to the
+ * frontend.
+ *
+ * Defining the shape here allows us to change the shape of the JSON object
+ * globally without hunting down the specific lines of code in the client or
+ * server.
+ *
+ * Likely to be more useful later than they are now.
+ */
 struct KlineData {
   string Open;
   string Close;
@@ -64,6 +77,11 @@ struct OutboundJSONStruct {
   KlineData Kline;
 };
 
+/* These lines tell nlohmann/json to define KlineData and OutboundJSONStruct as
+ *  types.
+ *
+ *  Should be <type_you_want>, <member_1>, <member_2>, ..., <member_n>
+ */
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(KlineData, Open, Close, High, Low);
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(OutboundJSONStruct, TimeStamp, Coin, Kline);
 
@@ -72,25 +90,14 @@ NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(OutboundJSONStruct, TimeStamp, Coin, Kline);
  * This function sets the server's behavior on message callback, and
  * starts the server.
  *
- * It will always print details about the remote connection.
+ * Message callback behavior needs to be set to avoid a warning from
+ * ixwebsockets, but we don't need the server to do anything yet, so that method
+ * just has an empty body.
  */
 void StartServer() {
-  // Set behavior on message receipt from frontend.
   Server.setOnClientMessageCallback(
       [](shared_ptr<ix::ConnectionState> connectionState, WebSocket &webSocket,
-         const MessagePtr &msg) {
-        cout << "Remote ip: " << connectionState->getRemoteIp() << endl;
-
-        if (msg->type == MessageType::Open) {
-          cout << "New connection" << endl;
-          cout << "Uri: " << msg->openInfo.uri << endl;
-          webSocket.send("Connected");
-        }
-        // Commented out while debugging frontend.
-        // if (msg->type == MessageType::Close) {
-        // Server.stop();
-        //}
-      });
+         const MessagePtr &msg) {});
 
   Server.listenAndStart();
 }
@@ -158,57 +165,69 @@ void ConnectToWebSocket(const string &coin) {
   SocketsVector.push_back(move(Socket));
 }
 
-/* int main(int argc, char *argv[])
+/* int main()
  *
- * main takes the coins you'd like to receive info on as a set of arguments.
- * It will then spawn the server, and spawn a WebSocket for every coin.
+ * main creates a vector of coins, using the default coins.
+ * It will then spawn the server, and spawn a WebSocket for every coin in
+ * background threads.
  *
- * Currently, it takes no major ownership or control of the threads that are
- * spawned for the WebSockets and the Server.
+ * Afterwards, it launches the WebView window - sourcing the contents from the
+ * frontend's `dist` folder. Vite needs to output a single file `index.html` for
+ * this to work. So - the frontend is static in this implementation. e.g. no hot
+ * reloading. The frontend must be re-built after every change, and this
+ * application relaunched.
+ *
+ * TODO: Accept some flag or argument to enable hot reloading for development
+ * quality of life. Will point to vite's dev server rather than the built
+ * index.html.
  */
-int main(int argc, char *argv[]) {
+int main() {
   // Required for Windows.
   ix::initNetSystem();
 
   // Holds the names of coins.
   // Also known as the <ticker> or <symbol>.
-  vector<string> coins;
+  vector<string> coins = {"btcusdt", "ethusdt", "adausdt",
+                          "xrpusdt", "dotusdt", "uniusdt"};
 
-  // If no arguments are supplied, use the default coins.
-  if (argc < 3) {
-    coins = {"btcusdt", "ethusdt", "adausdt", "xrpusdt", "dotusdt", "uniusdt"};
-  } else {
-    for (int i = 1; i < argc; i++) {
-      string Argument = argv[i];
-      coins.push_back(Argument);
-    }
-  }
-
+  // Build relative filepath to the frontend's index.html build artifact.
+  // Presumes you ran this file from `build/` in the project's root directory.
   filesystem::path FrontendPath =
       filesystem::current_path() / ".." / "MarketUI" / "dist" / "index.html";
 
-  // Spawn the server. See above.
+  // Spawn the server in a thread.
   thread ServerThread(StartServer);
 
-  // For each coin, spawn a WebSocket.
+  // For each coin, spawn a client thread.
   thread ClientThread([&coins]() {
     for (const string &coin : coins) {
       ConnectToWebSocket(coin);
     }
   });
 
+  /* 1. Define window `Webview Window`
+   *    1a. debug = true (allows F12 developer menu).
+   *    1b. window = nullptr (No window exists yet - make a new one).
+   * 2. Set its title.
+   * 3. Set its default size.
+   *    3a. width = 1200.
+   *    3b. height = 800.
+   *    3c. hints = ...NONE(No resizing restrictions).
+   *        3c-1. Can do MIN, MAX, FIXED if desired.
+   * 4. Set where the window goes.
+   *    4a. Currently goes to `index.html` frontend build artifact.
+   * 5. Then, run the window.
+   */
   WebView Window(true, nullptr);
   Window.set_title("Simple Trade");
   Window.set_size(1200, 800, WEBVIEW_HINT_NONE);
-
-  if (argv[0] == "D") {
-    Window.navigate("http://localhost:5173");
-  } else {
-    Window.navigate("file://" + FrontendPath.generic_string());
-  }
-
+  Window.navigate("file://" + FrontendPath.generic_string());
   Window.run();
 
+  /* Server.listenAndStart() is a blocking call.
+   * We need to explicitly call for the server's death.
+   * Then, join the threads and exit.
+   */
   Server.stop();
   ServerThread.join();
   ClientThread.join();
