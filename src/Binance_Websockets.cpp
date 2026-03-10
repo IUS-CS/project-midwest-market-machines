@@ -20,7 +20,7 @@
 #include "nlohmann/detail/macro_scope.hpp"
 #include "webview/types.h"
 #include "webview/webview.h"
-#include <chrono>
+#include <filesystem>
 #include <iostream>
 #include <ixwebsocket/IXWebSocketServer.h>
 #include <nlohmann/json.hpp>
@@ -175,14 +175,17 @@ int main(int argc, char *argv[]) {
   vector<string> coins;
 
   // If no arguments are supplied, use the default coins.
-  if (argc < 2) {
+  if (argc < 3) {
     coins = {"btcusdt", "ethusdt", "adausdt", "xrpusdt", "dotusdt", "uniusdt"};
   } else {
-    for (int i = 0; i < argc; i++) {
+    for (int i = 1; i < argc; i++) {
       string Argument = argv[i];
       coins.push_back(Argument);
     }
   }
+
+  filesystem::path FrontendPath =
+      filesystem::current_path() / ".." / "MarketUI" / "dist" / "index.html";
 
   // Spawn the server. See above.
   thread ServerThread(StartServer);
@@ -197,7 +200,12 @@ int main(int argc, char *argv[]) {
   WebView Window(true, nullptr);
   Window.set_title("Simple Trade");
   Window.set_size(1200, 800, WEBVIEW_HINT_NONE);
-  Window.navigate("http://localhost:5173");
+
+  if (argv[0] == "D") {
+    Window.navigate("http://localhost:5173");
+  } else {
+    Window.navigate("file://" + FrontendPath.generic_string());
+  }
 
   Window.run();
 
