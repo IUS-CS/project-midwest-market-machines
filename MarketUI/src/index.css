@@ -1,7 +1,6 @@
 /*
   * Global styling for text, color-schemes, and elements.
   * Imported in main.jsx to apply styles across the entire app.
-  */
 */
 :root {
   /* Font and typography settings */
@@ -63,4 +62,13 @@ button:hover {
 button:focus,
 button:focus-visible {
   outline: 4px auto -webkit-focus-ring-color;
+}
+
+/* Ensures the page takes up the full viewport height and does not scroll sideways */
+html,
+body {
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+  overflow-x: hidden;
 }
