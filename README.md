@@ -8,7 +8,7 @@ Simple Trade is an AI-assisted trading application for major cryptocurrencies an
 
 ### Dependencies
 
-Simple Trade requires that you have [Node.js](https://nodejs.org/en/download) and [CMAKE](https://cmake.org/) v3.5 or greater installed.
+Simple Trade requires that you have [Node.js](https://nodejs.org/en/download) and [CMAKE](https://cmake.org/) v3.24 or greater installed. For windows development, you will need nmake and its dependencies - notably Visual Studio.
 
 To check if Node.js is installed, open your operating system's terminal and type `node -v` and `npm -v`. If the command isn't recognized, you can download it [here](https://nodejs.org/en/download).
 
@@ -16,29 +16,47 @@ Check for CMake version with `cmake --version`.
 
 ### Building
 
-1. Navigate to the `MarketUI` directory for the project. This can be done by copying the path when in the `MarketUI` folder, and then typing `cd [CopiedPath]\MarketUI` into your terminal (i.e. Command Prompt).
-2. Run the following commands:
+1. Navigate to the `MarketUI` directory for the project.
+2. If on Windows - ensure your ExecutionPolicy is set to allow scripts to be run from the terminal. You may use `Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass` to accomplish this.
+3. Run the following commands:
+
+PowerShell
+
+```PowerShell
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass # Included from Step 2.
+npm install --legacy-peer-deps                             # Install but ignore peer dependency conflicts.
+npm run build                                              # Build the frontend to `dist/index.html`
+```
+
+Bash
 
 ```bash
-Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
-npm install --legacy-peer-deps
-npm run dev
+npm install
+npm run build                                 # Build the frontend to `dist/index.html`
 ```
 
 Then, in the project's root directory, run the following commands:
 
+PowerShell
+
+```PowerShell
+# Set current dir as source, ./build/ as build dir, and MiniGW Makefiles as the makefiles generator.
+cmake -S . -B build/ -G "MiniGW Makefiles"
+cd build/
+nmake
+./Binance_Websockets.exe
+```
+
 ```bash
 cmake -S . -B build/                          # Set ./build/ as the build diretory, and build to it.
-cmake --build build --config Debug
-./build/Debug/Binance_Websockets.exe          # Run the backend.
+cd build/
+make                                          # Make Binance_Websockets.cpp and other files.
+./Binance_Websockets.exe          # Run the backend.
 ```
 
 > [!TIP]
 > You may get an error after running `npm install --legacy-peer-deps`, but it can be safely ignored.
-
-After you run these commands click the `https://localhost:[numbers]/` address while holding `Ctrl` to open the launch page in your browser. 
-Alternatively, you may press `b` from the vite dev terminal window to have vite launch a browser window for you.
-
+>
 ## Testing
 
 For the frontend, navigate to `Midwest Market Machines/MarketUI/` and run `npm test`.
@@ -50,4 +68,3 @@ This will run `SmokeTest`, a file you made while building with CMake.
 ## The Launch Page
 
 ![Launch Page](https://github.com/IUS-CS/project-midwest-market-machines/blob/main/docs/Simple%20Trade.png)
-
