@@ -7,6 +7,7 @@
   display: block;
   width: 300px;
   padding: 1rem;
+  padding-left: 0rem;
   background-color: #282c34;
 }
 /* ShowPrice component styling, uses space-between to align text and price numbers */
