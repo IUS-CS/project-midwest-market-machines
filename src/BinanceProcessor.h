@@ -1,3 +1,21 @@
+/* BinanceProcessor
+ * Class header file.
+ * The Simple Trade App
+ *
+ * BinanceProcessor.h
+ *
+ * This header file creates the BinanceProcessor class.
+ * The BinanceProcessor uses two structs, defined outside the class:
+ *    1. KlineData, which holds minimal info on the Kline.
+ *    2. OutboundJSONStruct, which is the actual struct to be sent out.
+ *
+ * The BinanceProcessor class exposes one public method:
+ *    1. OutboundJSONStruct toSimpleKline(const json &received)
+ *        - This method takes a JSON object, and returns the simplified
+ *          kline OutboundJSONStruct.
+ *          The "meat" of the parsing logic is here.
+ */
+
 #pragma once
 
 #include <nlohmann/json.hpp>
