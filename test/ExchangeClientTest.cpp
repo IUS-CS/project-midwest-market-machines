@@ -15,6 +15,26 @@
 
 using namespace std;
 
+/* class ExchangeClientTest
+ *
+ * This class holds data items that will be used *throughout* the test suites.
+ * In accordance with gtest's guides, this class is derived from Test.
+ *
+ * Convention is to use SetUp() and TearDown() to describe the setup and
+ * teardown processes, however, this sets up and tears down *between* each test.
+ * We use SetUpTestSuite() and TearDownTestSuite() to setup once for the entire
+ * suite.
+ *
+ * atomic<bool> MessageEmpty is used in the first test. It should be atomic<> as
+ * SetCallback is non-blocking. Possible race condition unless the bool state is
+ * shared across threads.
+ *
+ * unique_ptr<ix::WebSocketServer> is used to hold the Server.
+ * ServerThread holds the server's thread.
+ *
+ * BinanceKline is arbitraty Kline data from a connection to Binance. This is
+ * real data pulled from Binance from a run of Binance_Websockets.cpp
+ */
 class ExchangeClientTest : public ::testing::Test {
 protected:
   static atomic<bool> MessageEmpty;
@@ -56,6 +76,7 @@ protected:
         });
 
     ServerThread = thread([]() { Server->listenAndStart(); });
+    // Wait 2ms for the server to warm up (grab a port).
     this_thread::sleep_for(chrono::milliseconds(2));
   }
 
@@ -77,12 +98,14 @@ unique_ptr<ix::WebSocketServer> ExchangeClientTest::Server = nullptr;
 TEST_F(ExchangeClientTest, SubscribesTo) {
   ExchangeClient TestClient;
   TestClient.SetCallback([](const string &msg) -> void {
+    // If msg is not empty, then we received something.
     if (!msg.empty()) {
       MessageEmpty = false;
     }
   });
   TestClient.Connect("ws://127.0.0.1:9999");
 
+  // Wait 2ms for any funny business in the client thread to finish.
   this_thread::sleep_for(chrono::milliseconds(2));
   EXPECT_FALSE(MessageEmpty);
 }
