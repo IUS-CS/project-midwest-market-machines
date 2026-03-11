@@ -1,3 +1,30 @@
+/* ExchangeClient
+ * Class header file.
+ * The Simple Trade App
+ *
+ * ExchangeClient.h
+ *
+ * This header file creates the ExchangeClient class.
+ * The ExchangeClient class creates private members:
+ *    1. A websocket.
+ *    2. A Processor (see BinanceProcessor.cpp).
+ *    3. An executable callback for event handling (OnCallback).
+ *    4. A mutex for printing to console, if desired.
+ *    5. A debug flag (bool).
+ *
+ * Then, as public methods:
+ *    1. void setDEBUG(bool debug)
+ *        - true/false for DEBUG flag.
+ *    2. void SetCallback(function<void(const string &)> Behavior)
+ *        - Pass the behavior function you'd like into the class
+ *          for what the ExchangeClient should do with the message on receipt.
+ *    3. void Connect(string stream)
+ *        - Point the ExchangeClient to the stream you'd like, and start it.
+ *
+ * ExchangeClient uses ix::IXWebSocket.h to create a client websocket.
+ * It uses the non-blocking call `socket.start()`.
+ */
+
 #pragma once
 
 #include "BinanceProcessor.h"

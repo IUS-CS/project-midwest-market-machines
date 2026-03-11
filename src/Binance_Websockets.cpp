@@ -130,8 +130,11 @@ int main() {
       }
     });
 
+    // Build the desired uri to connect to.
     string uri = "wss://stream.binance.us:9443/ws/" + coin + "@kline_1m";
 
+    // Connect a client, and place it on the back of the vector.
+    // emplace_back() moves it to the end of the vector without rebuilding it.
     clientThreadsVector.emplace_back(
         [client = client.get(), uri]() { client->Connect(uri); });
 
