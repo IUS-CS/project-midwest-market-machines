@@ -20,6 +20,7 @@
 
 // Minimum necessary includes
 #include "BinanceProcessor.h"
+#include "ExchangeClient.h"
 #include "webview/webview.h"
 #include <filesystem>
 #include <iostream>
@@ -88,6 +89,8 @@ void StartServer() {
  * 4. Print JSON objects sent and received (if DEBUG)
  * 5. On message close, close the WebSocket.
  */
+
+/*
 void ConnectToWebSocket(const string &coin) {
   auto Socket = make_unique<WebSocket>();
   string StreamUrl = "wss://stream.binance.us:9443/ws/" + coin + "@kline_1m";
@@ -124,6 +127,8 @@ void ConnectToWebSocket(const string &coin) {
   SocketsVector.push_back(move(Socket));
 }
 
+*/
+
 /* int main()
  *
  * main creates a vector of coins, using the default coins.
@@ -158,11 +163,24 @@ int main() {
   thread ServerThread(StartServer);
 
   // For each coin, spawn a client thread.
+
+  /*
   thread ClientThread([&coins]() {
     for (const string &coin : coins) {
       ConnectToWebSocket(coin);
     }
   });
+  */
+
+  ExchangeClient testClient;
+  testClient.SetCallback([](const string &msg) {
+    for (auto &&client : Server.getClients()) {
+      client->send(msg);
+      cout << msg << endl;
+    }
+  });
+
+  testClient.Connect("wss://stream.binance.us:9443/ws/btcusdt@kline_1m");
 
   /* 1. Define window `Webview Window`
    *    1a. debug = true (allows F12 developer menu).
@@ -189,7 +207,7 @@ int main() {
    */
   Server.stop();
   ServerThread.join();
-  ClientThread.join();
+  // ClientThread.join();
 
   return 0;
 }
