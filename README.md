@@ -16,28 +16,28 @@ Check for CMake version with `cmake --version`.
 
 ### Building
 
-1. Navigate to the `MarketUI` directory for the project. This can be done by copying the path when in the `MarketUI` folder, and then typing `cd [CopiedPath]\MarketUI` into your terminal (i.e. Command Prompt).
+1. Navigate to the `MarketUI` directory for the project. This can be done by copying the path when in the `MarketUI` folder, and then typing `cd [CopiedPath]` into your terminal (i.e. Command Prompt).
 2. Run the following commands:
 
-```bash
+```powershell
 Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
 npm install --legacy-peer-deps
 npm install --save lightweight-charts
 npm run dev
 ```
 
+> [!TIP]
+> You may get an error after running `npm install --legacy-peer-deps`, but it can be safely ignored.
+
 Then, in the project's root directory, run the following commands:
 
-```bash
+```powershell
 cmake -S . -B build/                          # Set ./build/ as the build diretory, and build to it.
 cmake --build build --config Debug
 ./build/Debug/Binance_Websockets.exe          # Run the backend.
 ```
 
-> [!TIP]
-> You may get an error after running `npm install --legacy-peer-deps`, but it can be safely ignored.
-
-After you run these commands click the `https://localhost:[numbers]/` address while holding `Ctrl` to open the launch page in your browser. 
+After you run these commands, `Ctrl` + click the `https://localhost:[numbers]/` address to open the launch page in your browser. 
 Alternatively, you may press `b` from the vite dev terminal window to have vite launch a browser window for you.
 
 ## Testing
@@ -51,5 +51,6 @@ This will run `SmokeTest`, a file you made while building with CMake.
 ## The Launch Page
 
 ![Launch Page](https://github.com/IUS-CS/project-midwest-market-machines/blob/main/docs/Simple%20Trade.png)
+
 
 
