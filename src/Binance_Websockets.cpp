@@ -172,6 +172,26 @@ int main() {
   });
   */
 
+  vector<unique_ptr<ExchangeClient>> clients;
+  vector<thread> clientThreads;
+
+  for (const string &coin : coins) {
+    auto client = make_unique<ExchangeClient>();
+    client->SetCallback([](const string &msg) {
+      for (auto &&client : Server.getClients()) {
+        client->send(msg);
+      }
+    });
+
+    string uri = "wss://stream.binance.us:9443/ws/" + coin + "@kline_1m";
+
+    clientThreads.emplace_back(
+        [client = client.get(), uri]() { client->Connect(uri); });
+
+    clients.push_back(move(client));
+  }
+
+  /*
   ExchangeClient testClient;
   testClient.SetCallback([](const string &msg) {
     for (auto &&client : Server.getClients()) {
@@ -180,7 +200,15 @@ int main() {
     }
   });
 
-  testClient.Connect("wss://stream.binance.us:9443/ws/btcusdt@kline_1m");
+  for (auto &&coin : coins) {
+    string uri = "wss://stream.binance.us:9443/ws/" + coin + "@kline_1m";
+    thread ClientThread([testClient = &testClient, uri = uri]() -> void {
+      testClient->Connect(uri);
+    });
+  }
+  // testClient.Connect("wss://stream.binance.us:9443/ws/btcusdt@kline_1m");
+
+*/
 
   /* 1. Define window `Webview Window`
    *    1a. debug = true (allows F12 developer menu).
@@ -207,7 +235,10 @@ int main() {
    */
   Server.stop();
   ServerThread.join();
-  // ClientThread.join();
+
+  for (auto &client : clientThreads) {
+    client.join();
+  }
 
   return 0;
 }
