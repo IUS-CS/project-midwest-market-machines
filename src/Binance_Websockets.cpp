@@ -104,12 +104,14 @@ void ConnectToWebSocket(const string &coin) {
           json Received = json::parse(msg->str);
 
           json Shortened;
-          Shortened["TimeStamp"] = Received["E"];
+          // Shortened["EventTime"] = Received["E"];
           Shortened["Coin"] = Received["s"];
+          Shortened["Kline"]["StartTime"] = Received["k"]["t"];
           Shortened["Kline"]["Open"] = Received["k"]["o"];
           Shortened["Kline"]["Close"] = Received["k"]["c"];
           Shortened["Kline"]["High"] = Received["k"]["h"];
           Shortened["Kline"]["Low"] = Received["k"]["l"];
+          Shortened["Kline"]["KlineFinished"] = Received["k"]["x"];
           string Outbound = Shortened.dump(0);
 
           for (auto &&client : Server.getClients()) {
