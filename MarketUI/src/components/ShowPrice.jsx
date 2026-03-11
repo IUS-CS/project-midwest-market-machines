@@ -1,5 +1,7 @@
 import '../css/ShowPrice.css'
 
+/* Small component to display the price of a selected coin or asset */
+
 const ShowPrice = ({ price, coin }) => {
 
   return (
@@ -8,7 +10,6 @@ const ShowPrice = ({ price, coin }) => {
         <h3 className="PriceHeader">{coin}'s Price</h3>
         <h3 className="Price">${price}</h3>
       </nav>
-      <h4 className="Disclaimer-of-Spaghetti-code">Ticker updates every 4 seconds.</h4>
     </div>
   )
 }

@@ -16,6 +16,9 @@ const Watchlist = ({ coins,onAddCoin, onRemoveCoin, onCoin, currentCoin  }) => {
             <p> Add your favorite coins to the list</p>
               ):
               (<ul>
+                {/* Maps through the coins array to generate a clickable list item dynamically for each coin.
+                Logic could be extended or merged to generate new coin charts.
+                */}
                 {coins.map((coin) => (
                   <li
                     key={coin}
@@ -23,6 +26,7 @@ const Watchlist = ({ coins,onAddCoin, onRemoveCoin, onCoin, currentCoin  }) => {
                     onClick={() => onCoin(coin)}
                     style={{ cursor: 'pointer' }}
                   >
+                    {/* Removes the 'USDT' suffix for cleaner display in the watchlist */}
                     <span>{coin.replace('USDT', '')}</span>
                     <button onClick={(e) => { e.stopPropagation(); onRemoveCoin(coin); }}>remove</button>
                   </li>
