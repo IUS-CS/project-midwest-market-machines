@@ -33,12 +33,12 @@ set(CMAKE_CXX_STANDARD 17)                          # Set C++17 as minimum requi
 set(CMAKE_CXX_STANDARD_REQUIRED ON)                 # Enforce this minimum C++17 requirement.
 set(CMAKE_EXPORT_COMPILE_COMMANDS on)               # Export a list of compile commands to make clang shut up about errors.
 set(ZLIB_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)    # Don't build examples for zlib.
-set(ENABLE_TESTING OFF CACHE BOOL "" FORCE)         # Don't build tests included in dependency repositories.
 set(ENABLE_PROGRAMS OFF CACHE BOOL "" FORCE)        # Don't build programs.
 set(USE_TLS ON CACHE BOOL "" FORCE)                 # TLS required for WebSockets.
 set(USE_MBEDTLS ON CACHE BOOL "" FORCE)             # 
 set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)  #
 
+ENABLE_TESTING()
 include(FetchContent)
 include(GoogleTest)
 
@@ -143,4 +143,5 @@ target_include_directories(
   src
 )
 
-gtest_discover_tests(SmokeTest ExchangeClientTest)
+gtest_discover_tests(ExchangeClientTest)
+gtest_discover_tests(SmokeTest)
