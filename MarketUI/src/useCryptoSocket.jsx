@@ -9,11 +9,8 @@ const useCryptoSocket = (selectedCoin) => {
   const SOCKET_URL = "ws://127.0.0.1:8080";
 
   const [latestCandle, setLatestCandle] = useState(null)
-
   const candleMapRef = useRef(new Map());
-
   const lastCloseRef = useRef(null)
-
   const prevCoinRef = useRef(null);
 
   const { lastJsonMessage } = useWebSocket(
@@ -41,14 +38,12 @@ const useCryptoSocket = (selectedCoin) => {
       { return; }
 
     const k = lastJsonMessage.Kline;
-
     const open = parseFloat(k.Open);
     const high = parseFloat(k.High);
     const low = parseFloat(k.Low);
     const close = parseFloat(k.Close);
 
     const timeSeconds = Math.floor(k.StartTime / 1000);
-
     const existingCandle = candleMapRef.current.get(timeSeconds)
     const realOpen = existingCandle ? existingCandle.open : (lastCloseRef.current ?? open);
 
