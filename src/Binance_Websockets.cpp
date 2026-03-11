@@ -32,13 +32,6 @@ using MessagePtr = ix::WebSocketMessagePtr;
 using WebView = webview::webview;
 using namespace std;
 
-//-------------------Global Constants-----------------------
-
-// TRUE to print each JSON object and action to console.
-// FALSE to not do so.
-const bool DEBUG = true;
-//----------------------------------------------------------
-
 //-------------------Global Declarations--------------------
 WebSocketServer Server(8080, "127.0.0.1");
 //----------------------------------------------------------
