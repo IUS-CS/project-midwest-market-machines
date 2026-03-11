@@ -172,11 +172,12 @@ int main() {
   });
   */
 
-  vector<unique_ptr<ExchangeClient>> clients;
-  vector<thread> clientThreads;
+  vector<unique_ptr<ExchangeClient>> ExchangeClientPointersVector;
+  vector<thread> clientThreadsVector;
 
   for (const string &coin : coins) {
     auto client = make_unique<ExchangeClient>();
+    client->setDEBUG(true);
     client->SetCallback([](const string &msg) {
       for (auto &&client : Server.getClients()) {
         client->send(msg);
@@ -185,10 +186,10 @@ int main() {
 
     string uri = "wss://stream.binance.us:9443/ws/" + coin + "@kline_1m";
 
-    clientThreads.emplace_back(
+    clientThreadsVector.emplace_back(
         [client = client.get(), uri]() { client->Connect(uri); });
 
-    clients.push_back(move(client));
+    ExchangeClientPointersVector.push_back(move(client));
   }
 
   /*
@@ -236,7 +237,7 @@ int main() {
   Server.stop();
   ServerThread.join();
 
-  for (auto &client : clientThreads) {
+  for (auto &client : clientThreadsVector) {
     client.join();
   }
 
