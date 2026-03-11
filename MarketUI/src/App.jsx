@@ -11,8 +11,8 @@ import CandlestickChart from './components/CandlestickChart'
   2. Watchlist component when a user clicks on a coin-> 
   3. updates (currentCoin) state-> WebSocket function triggers->
   4. the WebSocket, returning the coin's price and other necessary data->
-  5.1. passing that price to the ShowPrice component to update the display.
-  5.2. and the rest of the data like start time and if the kline is done to the CandlestickChart component.
+  5a. passing that price to the ShowPrice component to update the display.
+  5b. and the rest of the data, such as start time and KlineFinished, is sent to the CandlestickChart component.
 */
 function App() {
 /* (1) Initialization: Sets the starting coin and establishes the socket connection */
@@ -33,9 +33,9 @@ function App() {
         {/* (3) State Update: onCoin triggers setCurrentCoin, restarting the cycle at step 1 */}
         <Watchlist onCoin={(c) => setCurrentCoin(c)} currentCoin={currentCoin} />
         <div className="flex_row">
-          {/* (5.1) Rendered Output: ShowPrice receives the final price and renders it to the screen */}
+          {/* (5a) Rendered Output: ShowPrice receives the final price and renders it to the screen */}
           <ShowPrice price={price} coin={currentCoin} />
-          {/* (5.2 Rendered Output: CandlestickChart receives the data necessary to create and update the candles)*/}
+          {/* (5b Rendered Output: CandlestickChart receives the data necessary to create and update the candles)*/}
           <CandlestickChart coin={currentCoin} latestCandle={latestCandle} />
         </div>
       </div>
