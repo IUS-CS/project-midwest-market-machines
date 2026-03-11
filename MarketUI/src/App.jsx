@@ -2,6 +2,7 @@ import { useState } from 'react'
 import './App.css'
 import Navbar from './components/navBar'
 import Watchlist from './components/Watchlist'
+import SearchBar from './components/Searchbar'
 import WebSocket from './WebSocket'
 import ShowPrice from './components/ShowPrice'
 import defaultWatchlist from './LocalStorage/defaultWatchlist'
@@ -43,6 +44,12 @@ const handleRemoveCoin = (coin) => {
         <h1>Simple Trade</h1>
         <p>Your one-stop shop for all things crypto!</p>
       </div>
+      <SearchBar
+        onSearch={(q) => {
+          const formatted = q.toUpperCase().trim();
+          if (formatted) setCurrentCoin(formatted);
+        }}
+/>
       {/* (2) User Input: Watchlist provides the interface for selecting a new coin */}
       {/* (3) State Update: onCoin triggers setCurrentCoin, restarting the cycle at step 1 */}
       <Watchlist coins={watchlist}
