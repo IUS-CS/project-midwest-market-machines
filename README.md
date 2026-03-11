@@ -22,6 +22,7 @@ Check for CMake version with `cmake --version`.
 ```bash
 Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
 npm install --legacy-peer-deps
+npm install --save lightweight-charts
 npm run dev
 ```
 
@@ -50,4 +51,5 @@ This will run `SmokeTest`, a file you made while building with CMake.
 ## The Launch Page
 
 ![Launch Page](https://github.com/IUS-CS/project-midwest-market-machines/blob/main/docs/Simple%20Trade.png)
+
 
