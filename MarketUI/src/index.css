@@ -64,7 +64,7 @@ button:focus-visible {
   outline: 4px auto -webkit-focus-ring-color;
 }
 
-/* Ensures the page takes up the full viewport height and does not scroll sideways */
+/* Ensures the page does not stretch to the right */
 html,
 body {
   margin: 0;
