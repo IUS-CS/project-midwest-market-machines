@@ -65,7 +65,8 @@ For the frontend, navigate to `Midwest Market Machines/MarketUI/` and run `npm t
 This will run the current [vitest](https://vitest.dev/) test suite.
 
 For the backend, navigate to `Midwest Market Machines/build` and run `ctest`.
-This will run `SmokeTest`, a file you made while building with CMake.
+There are currently two project-specific test files, `SmokeTest`, and `ExchangeClientTest`.
+Though, all test suites for all dependencies will be ran as well.
 
 ## The Launch Page
 
