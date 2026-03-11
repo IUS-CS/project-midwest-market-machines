@@ -108,6 +108,8 @@ add_executable(
   src/Risk_Analyzer.cpp
 )
 
+######################################################################################################################
+
 add_executable(
   SmokeTest
   test/SmokeTest.cpp
@@ -121,4 +123,24 @@ target_link_libraries(
   ixwebsocket
 )
 
-gtest_discover_tests(SmokeTest)
+add_executable(
+  ExchangeClientTest
+  test/ExchangeClientTest.cpp
+)
+
+target_link_libraries(
+  ExchangeClientTest
+  PRIVATE
+  gtest
+  GTest::gtest_main
+  nlohmann_json::nlohmann_json
+  ixwebsocket
+)
+
+target_include_directories(
+  ExchangeClientTest
+  PRIVATE
+  src
+)
+
+gtest_discover_tests(SmokeTest ExchangeClientTest)
