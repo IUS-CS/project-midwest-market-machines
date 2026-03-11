@@ -1,4 +1,4 @@
-// Create an object and store the coin array inside this will help us scale in the future if we want to store other meta data in the future
+// Object wrapping the coin array to allow additional metadata fields to be added as the project scales
 const defaultWatchlist = {
   coins: [
     "BTCUSDT",

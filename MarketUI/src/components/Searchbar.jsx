@@ -1,14 +1,11 @@
 import { useState } from 'react';
 
 
-// this will be a search component to work with the 
-//CandlestickChart component to update the chart as the UserActivation
-//is search for different candles
-// Primary goal is to collect the text input call 
-//onSearch(query) when submitted
+// Search component that works with the CandlestickChart component
+// to update the chart as the user searches for different candles.
+// Collects text input and calls onSearch(query) when submitted.
 
 const SearchBar=({onSearch})=>{
-    // capture the user data
     const [query,setQuery]=useState("");
     function submitSearch() {
         const trimmed = query.trim();
@@ -33,9 +30,6 @@ const SearchBar=({onSearch})=>{
           submitSearch();
         }}
         >search</button>
-        
-        
-        
       </div>
 
     );

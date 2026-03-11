@@ -16,24 +16,23 @@ import defaultWatchlist from './LocalStorage/defaultWatchlist'
   5. passing that price to the ShowPrice component to update the display.
 */
 function App() {
-/* (1) Initialization: Sets the starting coin and establishes the socket connection */
+  /* (1) Initialization: Sets the starting coin and establishes the socket connection */
   const [currentCoin, setCurrentCoin] = useState('BTCUSDT');
   const [watchlist, setWatchlist] = useState(defaultWatchlist.coins);
   /* (4) Data Channel: WebSocket hook listens for changes to currentCoin and returns price */
   const { price } = WebSocket(currentCoin);
-  // this will be the function to handle adding a coin to the list
+
+  // handles adding a coin to the list
   const handleAddCoin = (coin) => {
-    // standardize input
     const formattedCoin = coin.toUpperCase().trim();
     if (formattedCoin && !watchlist.includes(formattedCoin)) {
       setWatchlist([...watchlist, formattedCoin]);
-      }
+    }
   };
 
-// this will be a the function to handle the removal of coins
-const handleRemoveCoin = (coin) => {
-    setWatchlist(watchlist.filter((item)=> item!==coin));
-
+  // handles the removal of coins
+  const handleRemoveCoin = (coin) => {
+    setWatchlist(watchlist.filter((item) => item !== coin));
   };
 
   return (

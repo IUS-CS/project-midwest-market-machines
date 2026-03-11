@@ -6,8 +6,6 @@ import '../css/Watchlist.css';
 const Watchlist = ({ coins,onAddCoin, onRemoveCoin, onCoin, currentCoin  }) => {
   const [newCoin, setNewCoin] = useState('');
 
-
-
   return (
     <div className="watchlist-wrapper-div">
       <nav className="watchlist">
