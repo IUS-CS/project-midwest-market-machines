@@ -22,8 +22,8 @@ const WebSocket = (selectedCoin) => {
       /* JSON parsing, console logging, and string interpretation*/
       console.log('JSON received', event.data);
       const JSONData = JSON.parse(event.data);
-      const coin = JSONData["coin"];
-      const price = JSONData["price"];
+      const coin = JSONData["Coin"];
+      const price = JSONData["Kline"]?.["Close"];
       console.log(coin + ": $" + price);
       /* Filter logic to listen to changes in only selected coin*/
       if (coin === selectedCoin) {
