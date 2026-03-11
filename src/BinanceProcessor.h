@@ -24,10 +24,11 @@ struct KlineData {
   string Close;
   string High;
   string Low;
+  bool KlineFinished;
 };
 
 struct OutboundJSONStruct {
-  uint64_t TimeStamp;
+  uint64_t EventTime;
   string Coin;
   KlineData Kline;
 };
@@ -38,7 +39,7 @@ struct OutboundJSONStruct {
  *  Should be <type_you_want>, <member_1>, <member_2>, ..., <member_n>
  */
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(KlineData, Open, Close, High, Low);
-NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(OutboundJSONStruct, TimeStamp, Coin, Kline);
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(OutboundJSONStruct, EventTime, Coin, Kline);
 
 /* class BinanceProcessor exists to define the methods needed to parse Binance's
  * return JSONs into easy-to-read JSONs for the frontend.
@@ -56,12 +57,13 @@ public:
    */
   static OutboundJSONStruct toSimpleKline(const json &received) {
     OutboundJSONStruct outbound;
-    outbound.TimeStamp = received["E"];
+    outbound.EventTime = received["E"];
     outbound.Coin = received["s"];
     outbound.Kline.Open = received["k"]["o"];
     outbound.Kline.Close = received["k"]["c"];
     outbound.Kline.High = received["k"]["h"];
     outbound.Kline.Low = received["k"]["l"];
+    outbound.Kline.KlineFinished = received["k"]["x"];
     return outbound;
   }
 };
