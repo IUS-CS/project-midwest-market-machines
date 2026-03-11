@@ -47,6 +47,8 @@ nmake
 ./Binance_Websockets.exe
 ```
 
+Bash
+
 ```bash
 cmake -S . -B build/                          # Set ./build/ as the build diretory, and build to it.
 cd build/
