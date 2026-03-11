@@ -99,8 +99,6 @@ void StartWebview(filesystem::path FrontendPath) {
  * main creates a vector of coins, using the default coins.
  * It will then spawn background threads for the server and all coins.
  *
- * main() then launches the webview window with a call to
- *
  * TODO: Accept some flag or argument to enable hot reloading for development
  * quality of life. Will point to vite's dev server rather than the built
  * index.html.
