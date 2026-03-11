@@ -1,3 +1,4 @@
+/*Watchlist component styling, notably uses flex-start in .watchlist to pin to the left */
 .watchlist-wrapper-div {
   display: block;
   width: 100%;
@@ -5,6 +6,7 @@
   padding: 1rem;
   background-color: #282c34;
 }
+
 
 .watchlist{
   display: flex;

@@ -16,16 +16,6 @@ Check for CMake version with `cmake --version`.
 
 ### Building
 
-In the project's root directory, run the following commands:
-
-```bash
-cmake -S . -B build/          # Set ./build/ as the build diretory, and build to it.
-cd build/
-./Binance_Websockets          # Run the backend.
-```
-
-Then,
-
 1. Navigate to the `MarketUI` directory for the project. This can be done by copying the path when in the `MarketUI` folder, and then typing `cd [CopiedPath]\MarketUI` into your terminal (i.e. Command Prompt).
 2. Run the following commands:
 
@@ -35,10 +25,18 @@ npm install --legacy-peer-deps
 npm run dev
 ```
 
+Then, in the project's root directory, run the following commands:
+
+```bash
+cmake -S . -B build/                          # Set ./build/ as the build diretory, and build to it.
+cmake --build build --config Debug
+./build/Debug/Binance_Websockets.exe          # Run the backend.
+```
+
 > [!TIP]
 > You may get an error after running `npm install --legacy-peer-deps`, but it can be safely ignored.
 
-After you run these commands, copy the `https://localhost:[numbers]/` address and paste it into your browser's address bar to get to the launch page.
+After you run these commands click the `https://localhost:[numbers]/` address while holding `Ctrl` to open the launch page in your browser. 
 Alternatively, you may press `b` from the vite dev terminal window to have vite launch a browser window for you.
 
 ## Testing
