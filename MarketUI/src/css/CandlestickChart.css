@@ -1,0 +1,5 @@
+/* Manages the area that the chart lives in */
+.ChartContainer {
+  width: 100%;
+  height: 400px;
+}
