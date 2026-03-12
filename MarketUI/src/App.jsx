@@ -5,6 +5,7 @@ import Watchlist from './components/Watchlist'
 import useCryptoSocket from './useCryptoSocket'
 import ShowPrice from './components/ShowPrice'
 import CandlestickChart from './components/CandlestickChart'
+import About from './components/About'
 /*
   Main component, coordinates other files by connecting 
   1. (currentCoin) state which defaults to BTCUSDT->
@@ -19,27 +20,37 @@ function App() {
   const [currentCoin, setCurrentCoin] = useState('BTCUSDT');
   /* (4) Data Channel: WebSocket hook listens for changes to currentCoin and returns price */
   const { price, latestCandle} = useCryptoSocket(currentCoin);
+  /* Page Navigation State: Tracks which page should currently be displayed */
+  const [page, setPage] = useState('home');
 
   return (
     <>
-      <Navbar />
+      <Navbar setPage={setPage} />
 
-      <div className="App_header">
-        <h1>Simple Trade</h1>
-        <p>Your one-stop shop for all things crypto!</p>
-      </div>
-      <div className="main_layout">
-        {/* (2) User Input: Watchlist provides the interface for selecting a new coin */}
-        {/* (3) State Update: onCoin triggers setCurrentCoin, restarting the cycle at step 1 */}
-        <Watchlist onCoin={(c) => setCurrentCoin(c)} currentCoin={currentCoin} />
-        <div className="flex_row">
-          {/* (5a) Rendered Output: ShowPrice receives the final price and renders it to the screen */}
-          <ShowPrice price={price} coin={currentCoin} />
-          {/* (5b Rendered Output: CandlestickChart receives the data necessary to create and update the candles)*/}
-          <CandlestickChart coin={currentCoin} latestCandle={latestCandle} />
+      {page === 'home' && (
+        <>
+          <div className="App_header">
+            <h1>Simple Trade</h1>
+            <p>Your one-stop shop for all things crypto!</p>
+          </div>
+          <div className="main_layout">
+            {/* (2) User Input: Watchlist provides the interface for selecting a new coin */}
+            {/* (3) State Update: onCoin triggers setCurrentCoin, restarting the cycle at step 1 */}
+              <Watchlist onCoin={(c) => setCurrentCoin(c)} currentCoin={currentCoin} />
+          <div className="flex_row">
+            {/* (5a) Rendered Output: ShowPrice receives the final price and renders it to the screen */}
+            <ShowPrice price={price} coin={currentCoin} />
+            {/* (5b Rendered Output: CandlestickChart receives the data necessary to create and update the candles)*/}
+            <CandlestickChart coin={currentCoin} latestCandle={latestCandle} />
+          </div>
         </div>
-      </div>
-    </>
+      </>
+    )
+  }
+
+  {page === 'about' && <About />}
+  {page === 'contact' && <Contact />}
+  </>
   )
 }
 
