@@ -3,8 +3,9 @@ import './App.css'
 import Navbar from './components/navBar'
 import Watchlist from './components/Watchlist'
 import SearchBar from './components/Searchbar'
-import WebSocket from './WebSocket'
+import useCryptoSocket from './useCryptoSocket'
 import ShowPrice from './components/ShowPrice'
+import CandlestickChart from './components/CandlestickChart'
 import defaultWatchlist from './LocalStorage/defaultWatchlist'
 
 /*
@@ -12,15 +13,16 @@ import defaultWatchlist from './LocalStorage/defaultWatchlist'
   1. (currentCoin) state which defaults to BTCUSDT->
   2. Watchlist component when a user clicks on a coin-> 
   3. updates (currentCoin) state-> WebSocket function triggers->
-  4. the WebSocket, returning the coin's price->
-  5. passing that price to the ShowPrice component to update the display.
+  4. the WebSocket, returning the coin's price and other necessary data->
+  5a. passing that price to the ShowPrice component to update the display.
+  5b. and the rest of the data, such as start time and KlineFinished, is sent to the CandlestickChart component.
 */
 function App() {
   /* (1) Initialization: Sets the starting coin and establishes the socket connection */
   const [currentCoin, setCurrentCoin] = useState('BTCUSDT');
   const [watchlist, setWatchlist] = useState(defaultWatchlist.coins);
   /* (4) Data Channel: WebSocket hook listens for changes to currentCoin and returns price */
-  const { price } = WebSocket(currentCoin);
+  const { price, latestCandle } = useCryptoSocket(currentCoin);
 
   // handles adding a coin to the list
   const handleAddCoin = (coin) => {
@@ -48,21 +50,24 @@ function App() {
           const formatted = q.toUpperCase().trim();
           if (formatted) setCurrentCoin(formatted);
         }}
-/>
-      {/* (2) User Input: Watchlist provides the interface for selecting a new coin */}
-      {/* (3) State Update: onCoin triggers setCurrentCoin, restarting the cycle at step 1 */}
-      <Watchlist coins={watchlist}
-
-        onAddCoin={handleAddCoin}
-
-        onRemoveCoin={handleRemoveCoin}
-
-        onCoin={(c) => setCurrentCoin(c)}
-
-        currentCoin={currentCoin}
       />
-      {/* (5) Rendered Output: ShowPrice receives the final price and renders it to the screen */}
-      <ShowPrice price={price} coin={currentCoin} />
+      <div className="main_layout">
+        {/* (2) User Input: Watchlist provides the interface for selecting a new coin */}
+        {/* (3) State Update: onCoin triggers setCurrentCoin, restarting the cycle at step 1 */}
+        <Watchlist
+          coins={watchlist}
+          onAddCoin={handleAddCoin}
+          onRemoveCoin={handleRemoveCoin}
+          onCoin={(c) => setCurrentCoin(c)}
+          currentCoin={currentCoin}
+        />
+        <div className="flex_row">
+          {/* (5a) Rendered Output: ShowPrice receives the final price and renders it to the screen */}
+          <ShowPrice price={price} coin={currentCoin} />
+          {/* (5b Rendered Output: CandlestickChart receives the data necessary to create and update the candles)*/}
+          <CandlestickChart coin={currentCoin} latestCandle={latestCandle} />
+        </div>
+      </div>
     </>
   )
 }
