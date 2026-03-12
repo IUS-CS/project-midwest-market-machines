@@ -29,3 +29,4 @@ In an ongoing branch by Hunter, repeatable logic in our main backend file has be
 Currently, a primitive Iterator builds the list of active Watchlist coins, and a redundant process builds its corresponding graph. Combining the WatchList and CandlestickChart component and using a more complex Iterator would make the construction of the set of active charts more streamlined. 
 
 During Sprint 1, we opened a collaborative Figma account, by moving our prototyping and systems design there, the information can be better communicated, with visual, logical, and textual components like OOdesign instead of just text abstractions.
+![SAD Diagram](https://github.com/user-attachments/assets/93d90f19-211c-4736-887f-9f46523e0d5c)
