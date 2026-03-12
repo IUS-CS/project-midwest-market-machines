@@ -46,15 +46,13 @@ Here are screenshots of what we did:
 * As a team, we will commit to using the roadmaps in the KanBan
 
 ## Next Sprint Planning
-| Task | Estimate (Story Points) |
-|-----|-------------------------|
-| Create tests | 5 |
-| Implement Search for coins | 5 |
-| Packaging and Distribution of application as a unit | 5 |
-| Integrate Lightweight Charts into frontend | 3 |
-| Coin price has a delayed update on UI | 2 |
-| Navigation in UI... What are the extra pages for? | 2 |
-| Binance_WebSockets.cpp makes JSON objects just to dump them into strings | 2 |
-| Clean spaghetti code in Frontend | 1 |
-
-
+| Points | Story/Task |
+|--------|------|
+| 5 | Create tests |
+| 5 | Implement Search for coins |
+| 5 | Packaging and Distribution of application as a unit |
+| 3 | As a retail investor, I want to see how the price of an asset has moved over time so that I can predict trends and plan strategies |
+| 2 | As a retail investor, I want to view the current price of an asset so that I can see its current valuation |
+| 2 | Navigation in UI... What are the extra pages for? |
+| 2 | Binance_WebSockets.cpp makes JSON objects just to dump them into strings |
+| 1 | Clean spaghetti code in Frontend |
