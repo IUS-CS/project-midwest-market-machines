@@ -71,3 +71,5 @@ Though, all test suites for all dependencies will be ran as well.
 ## The Launch Page
 
 ![Launch Page](https://github.com/IUS-CS/project-midwest-market-machines/blob/main/docs/Simple%20Trade.png)
+
+
