@@ -1,7 +1,7 @@
 import '../css/navBar.css'
 
 /* Navigation component with a logo and placeholder links for about, home, contact*/
-const Navbar = () => {
+const Navbar = ({ setPage }) => {
 
   return (
     <div className="navBar-wrapper-div">
@@ -13,8 +13,8 @@ const Navbar = () => {
       <div className="navbar-spacer" />
 
         <ul className="navbar-links">
-          <li><a href="#">Home</a></li>
-          <li><a href="#">About</a></li>
+          <li><a href="#" onClick={() => setPage("home")}>Home</a></li>
+          <li><a href="#" onClick={() => setPage("about")}>About</a></li>
           <li><a href="#">Contact</a></li>
         </ul>
       </nav>
