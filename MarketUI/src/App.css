@@ -79,4 +79,25 @@ body {
   flex: 1;  /* Fills the rest of the row */
   min-width: 0; /* Prevents overflow from other elements */
 }
+/* App styling for about page */
+.about {
+  max-width: 900px;
+  margin: 40px auto;
+  text-align: center;
+}
+.about p, a {
+  font-size: 1.1rem;
+  line-height: 1.6;
+  text-align: left;
+  margin-bottom: 18px;
+}
+.about ul {
+  text-align: left;
+  display: inline-block;
+  margin-top: 10px;
+}
+.about li {
+  margin-bottom: 6px;
+}
+
 
