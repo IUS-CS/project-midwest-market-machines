@@ -320,4 +320,4 @@ vcpkg/
 
 # End of https://www.toptal.com/developers/gitignore/api/vim,intellij+all,intellij+iml,windows,macos,linux,visualstudiocode,cmake
 
-# ignore my auto git pull file
+# Ignore local automation script (git-auto.ps1) - not intended for version control
