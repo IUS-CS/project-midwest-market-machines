@@ -31,8 +31,10 @@ npm run build                                              # Build the frontend 
 Bash
 
 ```bash
-npm install
-npm run build                                 # Build the frontend to `dist/index.html`
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
+npm install --legacy-peer-deps
+npm install --save lightweight-charts
+npm run dev
 ```
 
 Then, in the project's root directory, run the following commands:

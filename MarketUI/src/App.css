@@ -15,7 +15,7 @@ Logo animation and styling, currently not used in the app, image should be added
 .logo {
   height: 6em;
   padding: 1.5em;
-  will-change: filter; /*Browser animation preloading hint for performance*/
+  will-change: filter; /* Browser animation preloading hint for performance */
   transition: filter 300ms;
 }
 /* Glow/Shadow effect behind the logo */
@@ -35,15 +35,13 @@ Logo animation and styling, currently not used in the app, image should be added
     transform: rotate(360deg);
   }
 }
-/* Animation trigger and timing*/
+/* Animation trigger and timing */
 @media (prefers-reduced-motion: no-preference) {
   a:nth-of-type(2) .logo {
     animation: logo-spin infinite 20s linear;
   }
-
-
 }
-/*Main body container and alignment, stacks navbar at top*/
+/* Main body container and alignment, stacks navbar at top */
 body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol';
   background-color: #282c34;
@@ -58,8 +56,27 @@ body {
 .card {
   padding: 2em;
 }
-/* App header styling, self explanatory block*/
-  .App_header {
+/* App header styling, self explanatory block */
+.App_header {
   text-align: center;
   margin: 2rem;
 }
+
+/* Flex row container for side-by-side elements */
+.main_layout {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  width: 100%;
+  padding: 1rem;
+  gap: 1rem;
+}
+
+/* The area that the chart lives in */
+.flex_row {
+  display: flex;
+  flex-direction: column;
+  flex: 1;  /* Fills the rest of the row */
+  min-width: 0; /* Prevents overflow from other elements */
+}
+
