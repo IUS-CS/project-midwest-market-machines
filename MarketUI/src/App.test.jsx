@@ -15,4 +15,5 @@ describe('App Component', () => {
   });
 
   it.todo('should update the view when a new coin is selected');
+  it.todo('should determine that serialized JSONs are received and parsed accurately');
 });
