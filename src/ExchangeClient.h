@@ -40,6 +40,40 @@ using json = nlohmann::json;
 using namespace std;
 
 class ExchangeClient {
+protected:
+  void HandleMessages(const ix::WebSocketMessagePtr &msg) {
+    switch (msg->type) {
+    case ix::WebSocketMessageType::Open:
+      if (OnOpen) {
+        OnOpen();
+      }
+      break;
+    case ix::WebSocketMessageType::Message:
+      if (OnCallback) {
+        OnCallback(msg->str);
+      }
+      if (DEBUG) {
+        PrintLocker.lock();
+        cout << "Received Message:\n" << msg->str << "\n" << endl;
+        PrintLocker.unlock();
+      }
+      break;
+    case ix::WebSocketMessageType::Close:
+      if (OnClose) {
+        OnClose();
+      }
+      socket.close();
+      break;
+    case ix::WebSocketMessageType::Error:
+      if (OnError) {
+        OnError(msg->errorInfo.reason);
+      }
+      break;
+    default:
+      break;
+    }
+  }
+
 private:
   WebSocket socket;
   BinanceProcessor Processor;
@@ -74,26 +108,7 @@ public:
 
     socket.setOnMessageCallback(
         [this](const ix::WebSocketMessagePtr &msg) -> void {
-          if (msg->type == ix::WebSocketMessageType::Message) {
-            json received = json::parse(msg->str);
-
-            json shortened = Processor.toSimpleKline(received);
-            string outbound = shortened.dump(0);
-
-            if (OnCallback) {
-              OnCallback(shortened.dump(0));
-            }
-
-            if (DEBUG) {
-              PrintLocker.lock();
-              cout << "Received:\n" << received.dump(2) << "\n" << endl;
-              cout << "Sent to client:\n" << outbound << "\n" << endl;
-              cout << "----------------------------------------" << endl;
-              PrintLocker.unlock();
-            }
-          } else if (msg->type == ix::WebSocketMessageType::Close) {
-            socket.close();
-          }
+          HandleMessages(msg);
         });
     socket.start();
   }
