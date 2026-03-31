@@ -76,7 +76,6 @@ protected:
 
 private:
   WebSocket socket;
-  BinanceProcessor Processor;
   function<void(const string &)> OnCallback;
   function<void()> OnOpen;
   function<void()> OnClose;
