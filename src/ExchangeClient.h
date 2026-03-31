@@ -29,6 +29,7 @@
 
 #include "BinanceProcessor.h"
 #include "ixwebsocket/IXWebSocketMessage.h"
+#include "ixwebsocket/IXWebSocketMessageType.h"
 #include <functional>
 #include <iostream>
 #include <ixwebsocket/IXWebSocket.h>
@@ -43,6 +44,9 @@ private:
   WebSocket socket;
   BinanceProcessor Processor;
   function<void(const string &)> OnCallback;
+  function<void()> OnOpen;
+  function<void()> OnClose;
+  function<void(const string &)> OnError;
   mutex PrintLocker;
   bool DEBUG = false;
 
@@ -51,6 +55,14 @@ public:
 
   void SetCallback(function<void(const string &)> Behavior) {
     OnCallback = Behavior;
+  }
+
+  void SetOnOpen(function<void()> Behavior) { OnOpen = Behavior; }
+
+  void SetOnClose(function<void()> Behavior) { OnClose = Behavior; }
+
+  void SetOnError(function<void(const string &)> Behavior) {
+    OnError = Behavior;
   }
 
   void Connect(string stream) {
