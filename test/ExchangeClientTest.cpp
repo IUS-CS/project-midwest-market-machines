@@ -10,6 +10,7 @@
  */
 
 #include "ExchangeClient.h"
+#include "ixwebsocket/IXWebSocketMessage.h"
 #include "gtest/gtest.h"
 #include <ixwebsocket/IXWebSocketServer.h>
 
@@ -91,11 +92,24 @@ protected:
   }
 };
 
+string stream = "ws://127.0.0.1:9999";
 atomic<bool> ExchangeClientTest::MessageEmpty{true};
 thread ExchangeClientTest::ServerThread;
 unique_ptr<ix::WebSocketServer> ExchangeClientTest::Server = nullptr;
 
-TEST_F(ExchangeClientTest, SubscribesTo) {
+TEST_F(ExchangeClientTest, ClientSocketOpens) {
+  ExchangeClient TestClient;
+  bool isOpen = false;
+  TestClient.SetOnOpen([&isOpen]() { isOpen = true; });
+
+  TestClient.Connect(stream);
+
+  this_thread::sleep_for(chrono::milliseconds(2));
+
+  EXPECT_TRUE(isOpen);
+}
+
+TEST_F(ExchangeClientTest, GetsMessage) {
   ExchangeClient TestClient;
   TestClient.SetCallback([](const string &msg) -> void {
     // If msg is not empty, then we received something.
@@ -103,7 +117,7 @@ TEST_F(ExchangeClientTest, SubscribesTo) {
       MessageEmpty = false;
     }
   });
-  TestClient.Connect("ws://127.0.0.1:9999");
+  TestClient.Connect(stream);
 
   // Wait 2ms for any funny business in the client thread to finish.
   this_thread::sleep_for(chrono::milliseconds(2));
