@@ -35,10 +35,11 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS on)               # Export a list of compile c
 set(ZLIB_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)    # Don't build examples for zlib.
 set(ENABLE_PROGRAMS OFF CACHE BOOL "" FORCE)        # Don't build programs.
 set(USE_TLS ON CACHE BOOL "" FORCE)                 # TLS required for WebSockets.
-set(USE_MBEDTLS ON CACHE BOOL "" FORCE)             # 
-set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)  #
+set(USE_MBEDTLS ON CACHE BOOL "" FORCE)             # Tell IXWebSocket we WILL use MBedTLS.
+set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)  # Tell GTest to use a shared version of runtime libraries.
 set(USE_TEST ON CACHE BOOL "" FORCE)                # Enable tests for IXWebSocket.
 set(WEBVIEW_BUILD_TESTS ON CACHE BOOL "" FORCE)     # Enable tests for webview.
+set(JSON_BuildTests OFF CACHE BOOL "" FORCE)        # Do *not* build nlohmann_json's test suite (buggy - tried it already).
 
 ENABLE_TESTING()
 include(FetchContent)
