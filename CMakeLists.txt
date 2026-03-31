@@ -37,6 +37,8 @@ set(ENABLE_PROGRAMS OFF CACHE BOOL "" FORCE)        # Don't build programs.
 set(USE_TLS ON CACHE BOOL "" FORCE)                 # TLS required for WebSockets.
 set(USE_MBEDTLS ON CACHE BOOL "" FORCE)             # 
 set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)  #
+set(USE_TEST ON CACHE BOOL "" FORCE)                # Enable tests for IXWebSocket.
+set(WEBVIEW_BUILD_TESTS ON CACHE BOOL "" FORCE)     # Enable tests for webview.
 
 ENABLE_TESTING()
 include(FetchContent)
