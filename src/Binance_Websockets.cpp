@@ -16,6 +16,7 @@
  */
 
 // Minimum necessary includes
+#include "BinanceProcessor.h"
 #include "ExchangeClient.h"
 #include "webview/webview.h"
 #include <filesystem>
@@ -118,8 +119,11 @@ int main() {
     auto client = make_unique<ExchangeClient>();
     client->setDEBUG(true);
     client->SetCallback([](const string &msg) {
+      BinanceProcessor Processor;
+      json received = json::parse(msg);
+      json shortened = Processor.toSimpleKline(received);
       for (auto &&client : Server.getClients()) {
-        client->send(msg);
+        client->send(shortened.dump(0));
       }
     });
 
