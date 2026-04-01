@@ -230,3 +230,17 @@ TEST_F(ExchangeClientTest, ClientSocketGetsMessage) {
   ASSERT_EQ(Future.wait_for(chrono::seconds(1)), future_status::ready);
   EXPECT_TRUE(Future.get());
 }
+
+TEST_F(ExchangeClientTest, ClientSocketCloses) {
+  TestClient Client;
+  promise<bool> Closed;
+  future<bool> Future = Closed.get_future();
+
+  Client.SetOnClose([&Closed]() { Closed.set_value(true); });
+  Client.Connect(stream);
+  Client.HandleMessages(FakeMessages(ix::WebSocketMessageType::Close));
+
+  ASSERT_EQ(Future.wait_for(chrono::seconds(1)), future_status::ready);
+  ASSERT_EQ(Client.getState(), ix::ReadyState::Closed);
+  EXPECT_TRUE(Future.get());
+}

@@ -84,6 +84,8 @@ private:
   bool DEBUG = false;
 
 public:
+  ix::ReadyState getState() { return socket.getReadyState(); }
+
   void setDEBUG(bool debug) { DEBUG = debug; }
 
   void SetCallback(function<void(const string &)> Behavior) {
