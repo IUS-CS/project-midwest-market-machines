@@ -35,7 +35,7 @@ build/*
 
 # Local automation scripts
 git-auto.ps1
-
+# Ignore local automation script (git-auto.ps1) - not intended for version control
 ### CMake ###
 CMakeLists.txt.user
 CMakeCache.txt
@@ -320,4 +320,4 @@ vcpkg/
 
 # End of https://www.toptal.com/developers/gitignore/api/vim,intellij+all,intellij+iml,windows,macos,linux,visualstudiocode,cmake
 
-# Ignore local automation script (git-auto.ps1) - not intended for version control
+

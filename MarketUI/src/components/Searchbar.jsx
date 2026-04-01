@@ -1,7 +1,7 @@
 import { useState } from 'react';
 
 // Search component that works with the CandlestickChart component
-// to update the chart as the user searches for different candles.
+// to update the chart as the user searches for different coins.
 // Collects text input and calls onSearch(query) when submitted.
 
 const SearchBar = ({ onSearch }) => {
