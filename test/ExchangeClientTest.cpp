@@ -69,7 +69,6 @@ protected:
                                                  {"x", true}}},
                                                {"s", "ETHUSDT"}};
 
-  //@TODO: Determine if wanted still.
   static void SetUpTestSuite() {
     promise<bool> IsReady;
     future<bool> FutureServerReady = IsReady.get_future();
@@ -130,37 +129,27 @@ ix::WebSocketMessagePtr FakeMessages(ix::WebSocketMessageType Type,
       ix::WebSocketOpenInfo(), ix::WebSocketCloseInfo());
 }
 
-//@TODO: Sleep issue.
-TEST_F(ExchangeClientTest, ClientSocketOpens) {
-  ExchangeClient TestClient;
-  promise<bool> IsOpen;
-  future<bool> future = IsOpen.get_future();
-
-  TestClient.SetOnOpen([&IsOpen]() { IsOpen.set_value(true); });
-  TestClient.Connect(stream);
-
-  ASSERT_EQ(future.wait_for(chrono::seconds(1)), future_status::ready);
-  EXPECT_TRUE(future.get());
-}
-
-TEST(ExchangeClientTestMocking, Sequence_Open_Message_Close) {
+TEST(ExchangeClientTestMocking, Sequence_Open_Message_Error_Close) {
   TestClient Client;
-  MockClientHooks MockHooks;
+  MockClientHooks Hooks;
 
-  Client.SetOnOpen([&]() { MockHooks.OnOpen(); });
-  Client.SetCallback([&](const string &msg) { MockHooks.OnMessage(msg); });
-  Client.SetOnClose([&]() { MockHooks.OnClose(); });
+  Client.SetOnOpen([&]() { Hooks.OnOpen(); });
+  Client.SetCallback([&](const string &msg) { Hooks.OnMessage(msg); });
+  Client.SetOnError([&](const string &msg) { Hooks.OnError(msg); });
+  Client.SetOnClose([&]() { Hooks.OnClose(); });
 
   {
     testing::InSequence Sequence;
-    EXPECT_CALL(MockHooks, OnOpen()).Times(1);
-    EXPECT_CALL(MockHooks, OnMessage(testing::HasSubstr("btcusdt"))).Times(1);
-    EXPECT_CALL(MockHooks, OnClose()).Times(1);
+    EXPECT_CALL(Hooks, OnOpen());
+    EXPECT_CALL(Hooks, OnMessage(testing::HasSubstr("btcusdt")));
+    EXPECT_CALL(Hooks, OnError(testing::HasSubstr("")));
+    EXPECT_CALL(Hooks, OnClose());
   }
 
   Client.HandleMessages(FakeMessages(ix::WebSocketMessageType::Open));
   Client.HandleMessages(
       FakeMessages(ix::WebSocketMessageType::Message, "{\"s\":\"btcusdt\"}"));
+  Client.HandleMessages(FakeMessages(ix::WebSocketMessageType::Error, ""));
   Client.HandleMessages(FakeMessages(ix::WebSocketMessageType::Close));
 };
 
@@ -212,3 +201,17 @@ TEST(ExchangeClientTestMocking, Client_Processes_20_Errors) {
     Client.HandleMessages(FakeMessages(ix::WebSocketMessageType::Error, ""));
   }
 };
+
+TEST_F(ExchangeClientTest, ClientSocketOpens) {
+  ExchangeClient TestClient;
+  promise<bool> IsOpen;
+  future<bool> future = IsOpen.get_future();
+
+  TestClient.SetOnOpen([&IsOpen]() { IsOpen.set_value(true); });
+  TestClient.Connect(stream);
+
+  ASSERT_EQ(future.wait_for(chrono::seconds(1)), future_status::ready);
+  EXPECT_TRUE(future.get());
+}
+
+TEST_F(ExchangeClientTest, ClientSocketGetsMessage) {}
