@@ -64,6 +64,18 @@ protected:
                                                  {"x", true}}},
                                                {"s", "ETHUSDT"}};
 
+  /* static void SetUpTestSuite() {...}
+   *
+   * Sets up the server *once* for the entirety of the ExchangeClientTest suite.
+   *
+   * 1. Sets a promise / future that the server is ready.
+   * 2. Sets the server's socket and address.
+   * 3. Sets the server's callback behavior, in this case, send the
+   *      BinanceKline.
+   * 4. Starts the server on its own thread (server is blocking!)
+   * 5. Checks to see if the server is ready.
+   * 6. Waits for up to 1s to see if the server grabs a port.
+   */
   static void SetUpTestSuite() {
     promise<bool> IsReady;
     future<bool> FutureServerReady = IsReady.get_future();
@@ -85,6 +97,14 @@ protected:
     FutureServerReady.wait_for(chrono::seconds(1));
   }
 
+  /* static void TearDownTestSuite() {...}
+   *
+   * Tears down the server at the end of the ExchangeClientTest suite.
+   *
+   * 1. Calls to have the Server stop.
+   * 2. Joins the server's thread.
+   * 3. Resets the server.
+   */
   static void TearDownTestSuite() {
     Server->stop();
 
@@ -96,11 +116,28 @@ protected:
   }
 };
 
+/* class TestClient
+ *
+ * This class exists to expose the protected methods of ExchangeClient.
+ * As of yet, there is only one piece that we are interested in:
+ * HandleMessages().
+ *
+ * Since HandleMessages(), well, handles the messages for ExchangeClient, we are
+ * able to inject ix::WebSocketMessage -s directly into the message handling
+ * logic and track how it responds.
+ *
+ * Particularly useful for mocking.
+ */
 class TestClient : public ExchangeClient {
 public:
   using ExchangeClient::HandleMessages;
 };
 
+/* class MockClientHooks
+ *
+ * This mocking class describes the four currently used mock methods from
+ * ExchangeClient.
+ */
 class MockClientHooks {
 public:
   MOCK_METHOD(void, OnOpen, (), ());
@@ -109,10 +146,20 @@ public:
   MOCK_METHOD(void, OnClose, (), ());
 };
 
+//---------------------- GLOBALS ----------------------------------------------
 string stream = "ws://127.0.0.1:9999";
 thread ExchangeClientTest::ServerThread;
 unique_ptr<ix::WebSocketServer> ExchangeClientTest::Server = nullptr;
+//-----------------------------------------------------------------------------
 
+/* FakeMessages() {...}
+ *
+ * FakeMessages is a helper method that takes advantage of the
+ * ix::WebSocketMessage() constructor. It allows us to build whichever
+ * WebSocketMessage that we need in the moment.
+ *
+ * We use the defaults for e, o, c.
+ */
 ix::WebSocketMessagePtr FakeMessages(ix::WebSocketMessageType Type,
                                      string Content = "") {
   static string StaticString;
@@ -123,6 +170,18 @@ ix::WebSocketMessagePtr FakeMessages(ix::WebSocketMessageType Type,
       ix::WebSocketOpenInfo(), ix::WebSocketCloseInfo());
 }
 
+//------------------------ MOCKING TESTS ---------------------------------------
+
+/* Sequence_Open_Message_Error_Close
+ *
+ * A mocking test - this test checks that the HandleMessages switch case works
+ * for all four message types it currently supports, and that they return their
+ * defined behavior in the order they are sent.
+ *
+ * 1. Set behavior for each message type.
+ * 2. Declare a desired sequence of method calls.
+ * 3. Make the method calls.
+ */
 TEST(ExchangeClientTestMocking, Sequence_Open_Message_Error_Close) {
   TestClient Client;
   MockClientHooks Hooks;
@@ -147,6 +206,16 @@ TEST(ExchangeClientTestMocking, Sequence_Open_Message_Error_Close) {
   Client.HandleMessages(FakeMessages(ix::WebSocketMessageType::Close));
 };
 
+/* Client_Processes_20_Opens
+ *
+ * A mocking test - this test checks that if 20 open messages are sent to
+ * HandleMessages in quick succession, then the defined behavior is given back
+ * 20 times.
+ *
+ * 1. Set behavior for open messages.
+ * 2. Declare we expect 20 calls to OnOpen().
+ * 3. Fire off 20 open messages.
+ */
 TEST(ExchangeClientMocking, Client_Processes_20_Opens) {
   TestClient Client;
   MockClientHooks Hooks;
@@ -159,6 +228,16 @@ TEST(ExchangeClientMocking, Client_Processes_20_Opens) {
   }
 };
 
+/* Client_Processes_20_Messages
+ *
+ * A mocking test - this test checks that if 20 messages are sent to
+ * HandleMessages in quick succession, then the defined behavior is given back
+ * 20 times.
+ *
+ * 1. Set behavior for messages.
+ * 2. Declare we expect 20 calls to OnOpen().
+ * 3. Fire off 20 messages.
+ */
 TEST(ExchangeClientTestMocking, Client_Processes_20_Messages) {
   TestClient Client;
   MockClientHooks Hooks;
@@ -172,6 +251,16 @@ TEST(ExchangeClientTestMocking, Client_Processes_20_Messages) {
   }
 };
 
+/* Client_Processes_20_Closes
+ *
+ * A mocking test - this test checks that if 20 closes are sent to
+ * HandleMessages in quick succession, then the defined behavior is given back
+ * 20 times.
+ *
+ * 1. Set behavior for closes.
+ * 2. Declare we expect 20 calls to OnClose().
+ * 3. Fire off 20 closes.
+ */
 TEST(ExchangeClientTestMocking, Client_Processes_20_Closes) {
   TestClient Client;
   MockClientHooks Hooks;
@@ -184,6 +273,16 @@ TEST(ExchangeClientTestMocking, Client_Processes_20_Closes) {
   }
 };
 
+/* Client_Processes_20_Errors
+ *
+ * A mocking test - this test checks that if 20 errors are sent to
+ * HandleMessages in quick succession, then the defined behavior is given back
+ * 20 times.
+ *
+ * 1. Set behavior for errors.
+ * 2. Declare we expect 20 calls to OnError().
+ * 3. Fire off 20 errors.
+ */
 TEST(ExchangeClientTestMocking, Client_Processes_20_Errors) {
   TestClient Client;
   MockClientHooks Hooks;
@@ -196,18 +295,43 @@ TEST(ExchangeClientTestMocking, Client_Processes_20_Errors) {
   }
 };
 
+//---------------------- LIVE SOCKET TESTS ------------------------------------
+
+/* ClientSocketOpens
+ *
+ * This test confirms that the ExchangeClient socket is able to open, grab a
+ * connection to the server, and process its open status through HandleMessages.
+ *
+ * 1. Declare an ExchangeClient, promise IsOpen and Future for it.
+ * 2. Set the OnOpen() behavior to then set the IsOpen bool = true.
+ * 3. Connect to the server.
+ * 4. Wait for up to 1 second for IsOpen to be ready.
+ * 5. Expect that IsOpen is true.
+ */
 TEST_F(ExchangeClientTest, ClientSocketOpens) {
-  ExchangeClient TestClient;
+  ExchangeClient Client;
   promise<bool> IsOpen;
   future<bool> Future = IsOpen.get_future();
 
-  TestClient.SetOnOpen([&IsOpen]() { IsOpen.set_value(true); });
-  TestClient.Connect(stream);
+  Client.SetOnOpen([&IsOpen]() { IsOpen.set_value(true); });
+  Client.Connect(stream);
 
   ASSERT_EQ(Future.wait_for(chrono::seconds(1)), future_status::ready);
   EXPECT_TRUE(Future.get());
 }
 
+/* ClientSocketGetsMessage
+ *
+ * This test confirms that the ExchangeClient is able to open, grab a connection
+ * to the server, and process a message through HandleMessages.
+ *
+ * 1. Declare an ExchangeClient, promise Received and Future for it.
+ * 2. Set the Callback behavior to set Received = true if the message is
+ *    non-empty.
+ * 3. Connect to the server.
+ * 4. Wait for up to 1 second for Received to be ready.
+ * 5. Expect that Receives is true.
+ */
 TEST_F(ExchangeClientTest, ClientSocketGetsMessage) {
   TestClient Client;
   promise<bool> Received;
@@ -225,9 +349,21 @@ TEST_F(ExchangeClientTest, ClientSocketGetsMessage) {
   EXPECT_TRUE(Future.get());
 }
 
-// TODO: Make the server send the close message. Server needs to be refactored a
-// bit to do so.
-//  Otherwise this test is no different than the mock test.
+/* ClientSocketCloses
+ *
+ * This test confirms that the ExchangeClient is able to open, grab a connection
+ * to the server, and process a close through HandleMessages.
+ *
+ * 1. Declare an ExchangeClient, promise Closed and Future for it.
+ * 2. Set the OnClose() behavior to update Closed = true.
+ * 3. Connect to the server.
+ * 4. Wait for up to 1 second for Closed to be ready.
+ * 5. Assert the current state is closed.
+ * 6. Expect that Closed is true.
+ *
+ *  TODO: Make the server send the close message. Server needs to be refactored
+ * a bit to do so. Otherwise this test is no different than the mock test.
+ */
 TEST_F(ExchangeClientTest, ClientSocketCloses) {
   TestClient Client;
   promise<bool> Closed;
@@ -242,7 +378,22 @@ TEST_F(ExchangeClientTest, ClientSocketCloses) {
   EXPECT_TRUE(Future.get());
 }
 
-// TODO: Make the server send the error message. Same issue as above.
+/* ClientSocketErrors
+ *
+ * This test confirms that the ExchangeClient is able to open, grab a connection
+ * to the server, and process a error through HandleMessages.
+ *
+ * 1. Declare and ExchangeClient, promise Error and Future for it.
+ * 2. Declare a promised ix::ReadyState ErrorState and Future for it.
+ * 3. Set the OnError() behavior to update both Error and ErrorState.
+ * 4. Connect to the server.
+ * 5. Wait for up to 1 second for Error to be ready.
+ * 6. Wait for up to 1 second for ErrorState to be ready.
+ * 7. Expect that Error is true.
+ * 8. Expect the socket is closed.
+ *
+ * TODO: Make the server send the error message. Same issue as above.
+ */
 TEST_F(ExchangeClientTest, ClientSocketErrors) {
   TestClient Client;
   promise<bool> Error;
@@ -260,4 +411,5 @@ TEST_F(ExchangeClientTest, ClientSocketErrors) {
   ASSERT_EQ(Future.wait_for(chrono::seconds(1)), future_status::ready);
   ASSERT_EQ(FutureState.wait_for(chrono::seconds(1)), future_status::ready);
   EXPECT_TRUE(Future.get());
+  EXPECT_EQ(FutureState.get(), ix::ReadyState::Closed);
 }
