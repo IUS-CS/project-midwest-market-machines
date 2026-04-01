@@ -168,7 +168,7 @@ TEST_F(ExchangeClientTest, GetsMessage) {
 }
 
 //@TODO:
-TEST(ExchangeClientTestScenario, Sequence_Open_Message_Close) {
+TEST(ExchangeClientTestMocking, Sequence_Open_Message_Close) {
   TestClient Client;
   MockClientHooks MockHooks;
 
@@ -187,4 +187,53 @@ TEST(ExchangeClientTestScenario, Sequence_Open_Message_Close) {
   Client.HandleMessages(
       FakeMessages(ix::WebSocketMessageType::Message, "{\"s\":\"btcusdt\"}"));
   Client.HandleMessages(FakeMessages(ix::WebSocketMessageType::Close));
+};
+
+TEST(ExchangeClientMocking, Client_Processes_20_Opens) {
+  TestClient Client;
+  MockClientHooks Hooks;
+
+  Client.SetOnOpen([&]() { Hooks.OnOpen(); });
+  EXPECT_CALL(Hooks, OnOpen()).Times(20);
+
+  for (int i = 0; i < 20; i++) {
+    Client.HandleMessages(FakeMessages(ix::WebSocketMessageType::Open));
+  }
+};
+
+TEST(ExchangeClientTestMocking, Client_Processes_20_Messages) {
+  TestClient Client;
+  MockClientHooks Hooks;
+
+  Client.SetCallback([&](const string &msg) { Hooks.OnMessage(msg); });
+  EXPECT_CALL(Hooks, OnMessage(testing::HasSubstr("btcusdt"))).Times(20);
+
+  for (int i = 0; i < 20; i++) {
+    Client.HandleMessages(
+        FakeMessages(ix::WebSocketMessageType::Message, "{\"s\":\"btcusdt\"}"));
+  }
+};
+
+TEST(ExchangeClientTestMocking, Client_Processes_20_Closes) {
+  TestClient Client;
+  MockClientHooks Hooks;
+
+  Client.SetOnClose([&]() { Hooks.OnClose(); });
+  EXPECT_CALL(Hooks, OnClose()).Times(20);
+
+  for (int i = 0; i < 20; i++) {
+    Client.HandleMessages(FakeMessages(ix::WebSocketMessageType::Close));
+  }
+};
+
+TEST(ExchangeClientTestMocking, Client_Processes_20_Errors) {
+  TestClient Client;
+  MockClientHooks Hooks;
+
+  Client.SetOnError([&](const string &msg) { Hooks.OnError(msg); });
+  EXPECT_CALL(Hooks, OnError(testing::HasSubstr(""))).Times(20);
+
+  for (int i = 0; i < 20; i++) {
+    Client.HandleMessages(FakeMessages(ix::WebSocketMessageType::Error, ""));
+  }
 };
