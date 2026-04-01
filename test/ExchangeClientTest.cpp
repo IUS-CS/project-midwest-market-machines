@@ -217,11 +217,16 @@ TEST_F(ExchangeClientTest, ClientSocketOpens) {
 TEST_F(ExchangeClientTest, ClientSocketGetsMessage) {
   TestClient Client;
   promise<bool> Received;
-  future<bool> FutureReceived = Received.get_future();
+  future<bool> Future = Received.get_future();
 
   Client.SetCallback([&Received](const string &msg) {
     if (!msg.empty()) {
       Received.set_value(true);
     }
   });
+
+  Client.Connect(stream);
+
+  ASSERT_EQ(Future.wait_for(chrono::seconds(1)), future_status::ready);
+  EXPECT_TRUE(Future.get());
 }
