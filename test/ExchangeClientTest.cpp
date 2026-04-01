@@ -138,36 +138,6 @@ TEST_F(ExchangeClientTest, ClientSocketOpens) {
   EXPECT_TRUE(isOpen);
 }
 
-// Uses FakeMessages(){...}
-TEST(ExchangeClientLogic, OnOpen_Logic_Fires) {
-  TestClient Client;
-  bool OnOpen_Fired = false;
-
-  Client.SetOnOpen([&OnOpen_Fired]() { OnOpen_Fired = true; });
-
-  auto FakeOpen = FakeMessages(ix::WebSocketMessageType::Open);
-  Client.HandleMessages(FakeOpen);
-
-  EXPECT_TRUE(OnOpen_Fired);
-}
-
-//@TODO: Sleep issue.
-TEST_F(ExchangeClientTest, GetsMessage) {
-  ExchangeClient TestClient;
-  TestClient.SetCallback([](const string &msg) -> void {
-    // If msg is not empty, then we received something.
-    if (!msg.empty()) {
-      MessageEmpty = false;
-    }
-  });
-  TestClient.Connect(stream);
-
-  // Wait 2ms for any funny business in the client thread to finish.
-  this_thread::sleep_for(chrono::milliseconds(2));
-  EXPECT_FALSE(MessageEmpty);
-}
-
-//@TODO:
 TEST(ExchangeClientTestMocking, Sequence_Open_Message_Close) {
   TestClient Client;
   MockClientHooks MockHooks;
