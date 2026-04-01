@@ -10,11 +10,13 @@
  */
 
 #include "ExchangeClient.h"
+#include "ixwebsocket/IXWebSocket.h"
 #include "ixwebsocket/IXWebSocketErrorInfo.h"
 #include "ixwebsocket/IXWebSocketMessage.h"
 #include "ixwebsocket/IXWebSocketMessageType.h"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include <future>
 #include <gmock/gmock.h>
 #include <ixwebsocket/IXWebSocketServer.h>
 
@@ -69,6 +71,9 @@ protected:
 
   //@TODO: Determine if wanted still.
   static void SetUpTestSuite() {
+    promise<bool> IsReady;
+    future<bool> FutureServerReady = IsReady.get_future();
+
     Server = std::make_unique<ix::WebSocketServer>(9999, "127.0.0.1");
 
     Server->setOnClientMessageCallback(
@@ -82,8 +87,8 @@ protected:
         });
 
     ServerThread = thread([]() { Server->listenAndStart(); });
-    // Wait 2ms for the server to warm up (grab a port).
-    this_thread::sleep_for(chrono::milliseconds(2));
+    IsReady.set_value(Server->getPort());
+    FutureServerReady.wait_for(chrono::seconds(1));
   }
 
   static void TearDownTestSuite() {
@@ -128,14 +133,14 @@ ix::WebSocketMessagePtr FakeMessages(ix::WebSocketMessageType Type,
 //@TODO: Sleep issue.
 TEST_F(ExchangeClientTest, ClientSocketOpens) {
   ExchangeClient TestClient;
-  bool isOpen = false;
-  TestClient.SetOnOpen([&isOpen]() { isOpen = true; });
+  promise<bool> IsOpen;
+  future<bool> future = IsOpen.get_future();
 
+  TestClient.SetOnOpen([&IsOpen]() { IsOpen.set_value(true); });
   TestClient.Connect(stream);
 
-  this_thread::sleep_for(chrono::milliseconds(2));
-
-  EXPECT_TRUE(isOpen);
+  ASSERT_EQ(future.wait_for(chrono::seconds(1)), future_status::ready);
+  EXPECT_TRUE(future.get());
 }
 
 TEST(ExchangeClientTestMocking, Sequence_Open_Message_Close) {
