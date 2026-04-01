@@ -205,13 +205,13 @@ TEST(ExchangeClientTestMocking, Client_Processes_20_Errors) {
 TEST_F(ExchangeClientTest, ClientSocketOpens) {
   ExchangeClient TestClient;
   promise<bool> IsOpen;
-  future<bool> future = IsOpen.get_future();
+  future<bool> Future = IsOpen.get_future();
 
   TestClient.SetOnOpen([&IsOpen]() { IsOpen.set_value(true); });
   TestClient.Connect(stream);
 
-  ASSERT_EQ(future.wait_for(chrono::seconds(1)), future_status::ready);
-  EXPECT_TRUE(future.get());
+  ASSERT_EQ(Future.wait_for(chrono::seconds(1)), future_status::ready);
+  EXPECT_TRUE(Future.get());
 }
 
 TEST_F(ExchangeClientTest, ClientSocketGetsMessage) {
