@@ -10,6 +10,7 @@
  */
 
 #include "ExchangeClient.h"
+#include "ixwebsocket/IXWebSocketErrorInfo.h"
 #include "ixwebsocket/IXWebSocketMessage.h"
 #include "gtest/gtest.h"
 #include <ixwebsocket/IXWebSocketServer.h>
@@ -92,10 +93,25 @@ protected:
   }
 };
 
+class TestClient : public ExchangeClient {
+public:
+  using ExchangeClient::HandleMessages;
+};
+
 string stream = "ws://127.0.0.1:9999";
 atomic<bool> ExchangeClientTest::MessageEmpty{true};
 thread ExchangeClientTest::ServerThread;
 unique_ptr<ix::WebSocketServer> ExchangeClientTest::Server = nullptr;
+
+ix::WebSocketMessagePtr FakeMessages(ix::WebSocketMessageType Type,
+                                     string Content = "") {
+  static string StaticString;
+  StaticString = Content;
+
+  return make_unique<ix::WebSocketMessage>(
+      Type, StaticString, StaticString.size(), ix::WebSocketErrorInfo(),
+      ix::WebSocketOpenInfo(), ix::WebSocketCloseInfo());
+}
 
 TEST_F(ExchangeClientTest, ClientSocketOpens) {
   ExchangeClient TestClient;
@@ -107,6 +123,18 @@ TEST_F(ExchangeClientTest, ClientSocketOpens) {
   this_thread::sleep_for(chrono::milliseconds(2));
 
   EXPECT_TRUE(isOpen);
+}
+
+TEST(ExchangeClientLogic, OnOpen_Logic_Fires) {
+  TestClient Client;
+  bool OnOpen_Fired = false;
+
+  Client.SetOnOpen([&OnOpen_Fired]() { OnOpen_Fired = true; });
+
+  auto FakeOpen = FakeMessages(ix::WebSocketMessageType::Open);
+  Client.HandleMessages(FakeOpen);
+
+  EXPECT_TRUE(OnOpen_Fired);
 }
 
 TEST_F(ExchangeClientTest, GetsMessage) {
@@ -123,3 +151,5 @@ TEST_F(ExchangeClientTest, GetsMessage) {
   this_thread::sleep_for(chrono::milliseconds(2));
   EXPECT_FALSE(MessageEmpty);
 }
+
+TEST_F(ExchangeClientTest, t){};
