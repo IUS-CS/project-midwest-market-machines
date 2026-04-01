@@ -12,7 +12,10 @@
 #include "ExchangeClient.h"
 #include "ixwebsocket/IXWebSocketErrorInfo.h"
 #include "ixwebsocket/IXWebSocketMessage.h"
+#include "ixwebsocket/IXWebSocketMessageType.h"
+#include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include <gmock/gmock.h>
 #include <ixwebsocket/IXWebSocketServer.h>
 
 using namespace std;
@@ -64,6 +67,7 @@ protected:
                                                  {"x", true}}},
                                                {"s", "ETHUSDT"}};
 
+  //@TODO: Determine if wanted still.
   static void SetUpTestSuite() {
     Server = std::make_unique<ix::WebSocketServer>(9999, "127.0.0.1");
 
@@ -98,6 +102,14 @@ public:
   using ExchangeClient::HandleMessages;
 };
 
+class MockClientHooks {
+public:
+  MOCK_METHOD(void, OnOpen, (), ());
+  MOCK_METHOD(void, OnMessage, (const string &msg), ());
+  MOCK_METHOD(void, OnError, (const string &msg), ());
+  MOCK_METHOD(void, OnClose, (), ());
+};
+
 string stream = "ws://127.0.0.1:9999";
 atomic<bool> ExchangeClientTest::MessageEmpty{true};
 thread ExchangeClientTest::ServerThread;
@@ -113,6 +125,7 @@ ix::WebSocketMessagePtr FakeMessages(ix::WebSocketMessageType Type,
       ix::WebSocketOpenInfo(), ix::WebSocketCloseInfo());
 }
 
+//@TODO: Sleep issue.
 TEST_F(ExchangeClientTest, ClientSocketOpens) {
   ExchangeClient TestClient;
   bool isOpen = false;
@@ -125,6 +138,7 @@ TEST_F(ExchangeClientTest, ClientSocketOpens) {
   EXPECT_TRUE(isOpen);
 }
 
+// Uses FakeMessages(){...}
 TEST(ExchangeClientLogic, OnOpen_Logic_Fires) {
   TestClient Client;
   bool OnOpen_Fired = false;
@@ -137,6 +151,7 @@ TEST(ExchangeClientLogic, OnOpen_Logic_Fires) {
   EXPECT_TRUE(OnOpen_Fired);
 }
 
+//@TODO: Sleep issue.
 TEST_F(ExchangeClientTest, GetsMessage) {
   ExchangeClient TestClient;
   TestClient.SetCallback([](const string &msg) -> void {
@@ -152,4 +167,24 @@ TEST_F(ExchangeClientTest, GetsMessage) {
   EXPECT_FALSE(MessageEmpty);
 }
 
-TEST_F(ExchangeClientTest, t){};
+//@TODO:
+TEST(ExchangeClientTestScenario, Sequence_Open_Message_Close) {
+  TestClient Client;
+  MockClientHooks MockHooks;
+
+  Client.SetOnOpen([&]() { MockHooks.OnOpen(); });
+  Client.SetCallback([&](const string &msg) { MockHooks.OnMessage(msg); });
+  Client.SetOnClose([&]() { MockHooks.OnClose(); });
+
+  {
+    testing::InSequence Sequence;
+    EXPECT_CALL(MockHooks, OnOpen()).Times(1);
+    EXPECT_CALL(MockHooks, OnMessage(testing::HasSubstr("btcusdt"))).Times(1);
+    EXPECT_CALL(MockHooks, OnClose()).Times(1);
+  }
+
+  Client.HandleMessages(FakeMessages(ix::WebSocketMessageType::Open));
+  Client.HandleMessages(
+      FakeMessages(ix::WebSocketMessageType::Message, "{\"s\":\"btcusdt\"}"));
+  Client.HandleMessages(FakeMessages(ix::WebSocketMessageType::Close));
+};

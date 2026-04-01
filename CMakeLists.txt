@@ -136,6 +136,8 @@ target_link_libraries(
   PRIVATE
   gtest
   GTest::gtest_main
+  GTest::gmock
+  GTest::gmock_main
   nlohmann_json::nlohmann_json
   ixwebsocket
 )
