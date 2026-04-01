@@ -231,6 +231,9 @@ TEST_F(ExchangeClientTest, ClientSocketGetsMessage) {
   EXPECT_TRUE(Future.get());
 }
 
+// TODO: Make the server send the close message. Server needs to be refactored a
+// bit to do so.
+//  Otherwise this test is no different than the mock test.
 TEST_F(ExchangeClientTest, ClientSocketCloses) {
   TestClient Client;
   promise<bool> Closed;
@@ -242,5 +245,25 @@ TEST_F(ExchangeClientTest, ClientSocketCloses) {
 
   ASSERT_EQ(Future.wait_for(chrono::seconds(1)), future_status::ready);
   ASSERT_EQ(Client.getState(), ix::ReadyState::Closed);
+  EXPECT_TRUE(Future.get());
+}
+
+// TODO: Make the server send the error message. Same issue as above.
+TEST_F(ExchangeClientTest, ClientSocketErrors) {
+  TestClient Client;
+  promise<bool> Error;
+  future<bool> Future = Error.get_future();
+  promise<ix::ReadyState> ErrorState;
+  future<ix::ReadyState> FutureState = ErrorState.get_future();
+
+  Client.SetOnError([&Error, &ErrorState, &Client](const string &msg) {
+    Error.set_value(true);
+    ErrorState.set_value(Client.getState());
+  });
+  Client.Connect(stream);
+  Client.HandleMessages(FakeMessages(ix::WebSocketMessageType::Error, ""));
+
+  ASSERT_EQ(Future.wait_for(chrono::seconds(1)), future_status::ready);
+  ASSERT_EQ(FutureState.wait_for(chrono::seconds(1)), future_status::ready);
   EXPECT_TRUE(Future.get());
 }
