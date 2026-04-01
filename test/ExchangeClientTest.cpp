@@ -32,10 +32,6 @@ using namespace std;
  * We use SetUpTestSuite() and TearDownTestSuite() to setup once for the entire
  * suite.
  *
- * atomic<bool> MessageEmpty is used in the first test. It should be atomic<> as
- * SetCallback is non-blocking. Possible race condition unless the bool state is
- * shared across threads.
- *
  * unique_ptr<ix::WebSocketServer> is used to hold the Server.
  * ServerThread holds the server's thread.
  *
@@ -44,7 +40,6 @@ using namespace std;
  */
 class ExchangeClientTest : public ::testing::Test {
 protected:
-  static atomic<bool> MessageEmpty;
   static unique_ptr<ix::WebSocketServer> Server;
   static thread ServerThread;
   inline static nlohmann::json BinanceKline = {{"E", 1773198900017},
@@ -115,7 +110,6 @@ public:
 };
 
 string stream = "ws://127.0.0.1:9999";
-atomic<bool> ExchangeClientTest::MessageEmpty{true};
 thread ExchangeClientTest::ServerThread;
 unique_ptr<ix::WebSocketServer> ExchangeClientTest::Server = nullptr;
 
