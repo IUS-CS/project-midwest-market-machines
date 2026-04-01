@@ -214,4 +214,14 @@ TEST_F(ExchangeClientTest, ClientSocketOpens) {
   EXPECT_TRUE(future.get());
 }
 
-TEST_F(ExchangeClientTest, ClientSocketGetsMessage) {}
+TEST_F(ExchangeClientTest, ClientSocketGetsMessage) {
+  TestClient Client;
+  promise<bool> Received;
+  future<bool> FutureReceived = Received.get_future();
+
+  Client.SetCallback([&Received](const string &msg) {
+    if (!msg.empty()) {
+      Received.set_value(true);
+    }
+  });
+}
