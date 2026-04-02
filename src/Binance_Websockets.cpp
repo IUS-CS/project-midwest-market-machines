@@ -3,7 +3,6 @@
  * The Simple Trade App
  *
  * Hunter William Poole
- * 03-10-2026
  *
  * Binance_Websockets.cpp
  *
