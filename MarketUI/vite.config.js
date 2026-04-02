@@ -15,9 +15,16 @@ import { viteSingleFile } from 'vite-plugin-singlefile'
  *
  * base: './' ensures we use *relative paths.*
  *
+ * build {} is for build flags when running `npm run build`
+ *    - minify : false, as in, be verbose and point to errors.
+ *    - sourcemap: true, as in, map minified code back to source
  * https://vite.dev/config/
  */
 export default defineConfig({
   plugins: [react(), viteSingleFile()],
   base: './',
+  build: {
+    minify: false,
+    sourcemap: true,
+  },
 })
