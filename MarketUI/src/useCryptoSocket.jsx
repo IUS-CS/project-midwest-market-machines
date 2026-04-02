@@ -1,4 +1,3 @@
-import useWebSocket from 'react-use-websocket';
 import { useState, useEffect, useRef } from 'react';
 
 /* 
@@ -12,16 +11,31 @@ const useCryptoSocket = (selectedCoin) => {
   const candleMapRef = useRef(new Map());
   const lastCloseRef = useRef(null)
   const prevCoinRef = useRef(null);
+  const [lastJsonMessage, setLastJsonMessage] = useState(null);
 
-  const { lastJsonMessage } = useWebSocket(
-    SOCKET_URL, {
-    share: true,
-    shouldReconnect: () => true,
-    reconnectAttempts: 1000,
-    reconnectInterval: 3000,
-    onOpen: () => console.log('WebSocket opened'),
-    onClose: () => console.log('WebSocket closed'),
-  });
+  /* useEffect() for WebSocket socket.
+   *
+   * 1. Define WebSocket socket with SOCKET_URL.
+   * 2. Define the socket's onmessage behavior.
+   *    - In this case...
+   *    - Parse the received JSON.
+   *    - setLastJsonMessage for the new JSON.
+   * 3. Close the socket when finished.
+   *
+   * '[]' set to run this useEffect only once on startup.
+   *
+   * More information on this WebSocket API can be found at:
+   * https://developer.mozilla.org/en-US/docs/Web/API/WebSockets_API
+  */
+  useEffect(() => {
+    const socket = new WebSocket(SOCKET_URL);
+
+    socket.onmessage = (event) => {
+      const jsonReceived = JSON.parse(event.data);
+      setLastJsonMessage(jsonReceived);
+    }
+    return () => socket.close();
+  }, []);
 
   useEffect(() => {
     if (prevCoinRef.current !== selectedCoin) {
@@ -34,8 +48,7 @@ const useCryptoSocket = (selectedCoin) => {
   }, [selectedCoin])
 
   useEffect(() => {
-    if ( !lastJsonMessage || lastJsonMessage.Coin !== selectedCoin || !lastJsonMessage.Kline) 
-      { return; }
+    if (!lastJsonMessage || lastJsonMessage.Coin !== selectedCoin || !lastJsonMessage.Kline) { return; }
 
     const k = lastJsonMessage.Kline;
     const open = parseFloat(k.Open);
@@ -60,10 +73,10 @@ const useCryptoSocket = (selectedCoin) => {
     if (k.KlineFinished) { lastCloseRef.current = close; }
 
     const sorted = Array.from(candleMapRef.current.values()).sort((a, b) => a.time - b.time)
-    
+
     setPrice(close);
     setLatestCandle(candle);
-  
+
   }, [lastJsonMessage, selectedCoin]);
 
   return { price, latestCandle };
