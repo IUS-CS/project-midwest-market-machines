@@ -13,8 +13,7 @@
   "dependencies": {
     "lightweight-charts": "^5.1.0",
     "react": "^19.2.0",
-    "react-dom": "^19.2.0",
-    "react-use-websocket": "^4.13.0"
+    "react-dom": "^19.2.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.0.0",
