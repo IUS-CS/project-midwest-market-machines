@@ -118,7 +118,7 @@ int main() {
   for (const string &coin : coins) {
     auto client = make_unique<ExchangeClient>();
     client->SetDEBUG(true);
-    client->SetCallback([](const string &msg) {
+    client->SetOnMessage([](const string &msg) {
       BinanceProcessor Processor;
       json received = json::parse(msg);
       json shortened = Processor.toSimpleKline(received);

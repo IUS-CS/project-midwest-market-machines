@@ -11,7 +11,7 @@
  *
  * The ExchangeClient class contains these private members:
  *    1. A WebSocket.
- *    2. A function<void(const string &)> OnCallback.
+ *    2. A function<void(const string &)> OnMessage.
  *    3. A function<void()> OnOpen.
  *    4. A function<void()> OnClose.
  *    5. A function<void(const string &)> OnError.
@@ -77,8 +77,8 @@ protected:
       }
       break;
     case MessageType::Message:
-      if (OnCallback) {
-        OnCallback(msg->str);
+      if (OnMessage) {
+        OnMessage(msg->str);
       }
       if (DEBUG) {
         PrintLocker.lock();
@@ -107,7 +107,7 @@ private:
    *
    * 1. WebSocket socket;
    *    - An IXWebSocket client.
-   * 2. function<void(const string &)> OnCallback
+   * 2. function<void(const string &)> OnMessage
    *    - A function to define behavior on message type message.
    * 3. function<void()> OnOpen.
    *    - A function to define behavior on message type open.
@@ -123,7 +123,7 @@ private:
    *    - DEBUG == false if not (default).
    */
   WebSocket socket;
-  function<void(const string &)> OnCallback;
+  function<void(const string &)> OnMessage;
   function<void()> OnOpen;
   function<void()> OnClose;
   function<void(const string &)> OnError;
@@ -151,8 +151,8 @@ public:
 
   void SetDEBUG(bool debug) { DEBUG = debug; }
 
-  void SetCallback(function<void(const string &)> Behavior) {
-    OnCallback = Behavior;
+  void SetOnMessage(function<void(const string &)> Behavior) {
+    OnMessage = Behavior;
   }
 
   void SetOnOpen(function<void()> Behavior) { OnOpen = Behavior; }
