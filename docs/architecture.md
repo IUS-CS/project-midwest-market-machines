@@ -23,11 +23,11 @@ Once the program is built, the flow of data starts from Binance_Websockets.cpp.
 
 ## Connectivity
 
-Connections between components are handled via the state coordinator App.jsx. Each component has a narrowly defined purpose, meaning the props passed between components are easier to understand and test.  
+Connections between components are handled via the state coordinator App.jsx. Each component has a narrowly defined purpose, making the [props](https://www.w3schools.com/react/react_props.asp) passed between components are easier to understand and test.  
 1. When initialized, the App.jsx’s currentCoin state is set to BTCUSDT, and websocket connection is established. 
-2. The Watchlist component allows users to click on the component they wish to track at a given time, if for example ETH were clicked, the update triggers the useCryptoSocket to read the ETHUSDT part of the JSON data by changing currentCoin. 
-3. The WebSocket hook in useCryptoSocket listens for changes and returns price along with other data necessary to build the CandlestickChart. 
-4. The currentCoin filter causes the Showprice component and CandlestickChart  to update using ETH data, showing the current price from the most recent Binance JSON in ShowPrice, and building a candle that visualizes the price swings using information such as such as start time and KlineFinished. 
+2. The Watchlist component allows users to click on the component they wish to track at a given time. If for example ETH were clicked, the update triggers the useCryptoSocket to read the ETHUSDT part of the JSON data by changing currentCoin. 
+3. The WebSocket hook in useCryptoSocket listens for changes and returns the price, along with other data necessary to build the CandlestickChart. 
+4. The currentCoin filter causes the Showprice component and CandlestickChart to update using ETH data, showing the current price from the most recent Binance JSON in ShowPrice, and building a candle that visualizes the price swings using information such as start time and KlineFinished. 
 
 *A sequence diagram that shows how the components handle a typical chain of inputs*
 ![Diagram](https://github.com/user-attachments/assets/65e9d9b0-cf5e-412c-a26d-d896def89cba)
@@ -37,7 +37,7 @@ Connections between components are handled via the state coordinator App.jsx. Ea
 
 ## Frontend Data Handler
 
-This process is enabled by the useCryptoSocket node which connects to the backend’s Binance_Websockets and builds a Kline format to display a K-Line or Candlestick graph. The socket URL is defined at local ip 127.0.01 with port 8080, along with other necessary variables candleMapRef, lastCloseRef, and prevCoinRef. A function runs continuously until successful that attempts to connect to the backend and sends logs to the developer console. A useEffect function checks if the previous coin is mapping to the correct coin, which destroys the previous chart by mapping to a new candleMapRef and lastCloseRef. Then, a function checks for discrepancies in the JSON to ensure the coin is matching the format and selected coin and then builds the data into a returnable prop that can be sorted by the App.jsx.
+This process is enabled by the useCryptoSocket node, which connects to the backend’s Binance_Websockets and builds a Kline format to display a K-Line or Candlestick graph. The socket URL is defined at local ip 127.0.01 with port 8080, along with other necessary variables candleMapRef, lastCloseRef, and prevCoinRef. A function runs continuously until successful that attempts to connect to the backend and sends logs to the developer console. A useEffect function checks if the previous coin is mapping to the correct coin, which destroys the previous chart by mapping to a new candleMapRef and lastCloseRef. A function then checks for discrepancies in the JSON to ensure the coin is matching the format and selected coin, builds the data into a returnable prop, and passes it to App.jsx to be sorted.
 
 *This activity diagram follows the logic of the app when receiving data from the web socket*
 ![Diagram](https://github.com/user-attachments/assets/cbf5dd75-ad1e-4e04-a0da-422b8bf881c0)
