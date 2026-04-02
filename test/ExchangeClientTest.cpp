@@ -187,7 +187,7 @@ TEST(ExchangeClientTestMocking, Sequence_Open_Message_Error_Close) {
   MockClientHooks Hooks;
 
   Client.SetOnOpen([&]() { Hooks.OnOpen(); });
-  Client.SetCallback([&](const string &msg) { Hooks.OnMessage(msg); });
+  Client.SetOnMessage([&](const string &msg) { Hooks.OnMessage(msg); });
   Client.SetOnError([&](const string &msg) { Hooks.OnError(msg); });
   Client.SetOnClose([&]() { Hooks.OnClose(); });
 
@@ -242,7 +242,7 @@ TEST(ExchangeClientTestMocking, Client_Processes_20_Messages) {
   TestClient Client;
   MockClientHooks Hooks;
 
-  Client.SetCallback([&](const string &msg) { Hooks.OnMessage(msg); });
+  Client.SetOnMessage([&](const string &msg) { Hooks.OnMessage(msg); });
   EXPECT_CALL(Hooks, OnMessage(testing::HasSubstr("btcusdt"))).Times(20);
 
   for (int i = 0; i < 20; i++) {
@@ -337,7 +337,7 @@ TEST_F(ExchangeClientTest, ClientSocketGetsMessage) {
   promise<bool> Received;
   future<bool> Future = Received.get_future();
 
-  Client.SetCallback([&Received](const string &msg) {
+  Client.SetOnMessage([&Received](const string &msg) {
     if (!msg.empty()) {
       Received.set_value(true);
     }
