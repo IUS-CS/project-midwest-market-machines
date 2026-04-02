@@ -8,7 +8,14 @@ Our project consists of a React-based frontend that handles the User Interface w
 
 ## Project Overview
 
-Once the program is built, the flow of data starts from Binance_Websockets.cpp. It requests the necessary information every few seconds from Binance to build the trend of the chart. This data is pulled from the backend to the frontend, to useCryptoSocket.jsx. useCryptoSocket.jsx pulls which coin to display from Watchlist.jsx and constructs the information needed to make the "candles" for the chart, a way of displaying how much the price of a coin has fluctuated over a given time period, currently set at 1 minute. CandlestickChart.jsx pulls that information and uses it to make and update the candles in the chart that it creates at startup. If a new coin is selected from the Watchlist component, the chart's data is wiped and new candles begin to form with the new coin's datastream. navBar.jsx and ShowPrice.jsx are currently discrete components, but in the future navBar will link to other pages on the app. All of these components, useCryptoSocket, Watchlist, CandlestickChart, navBar, and ShowPrice are called on by App.jsx to build the main page. main.jsx is the entry point of the React application and pulls everything from App.jsx so that it can be rendered as the page that can be seen when the app launches.  
+Once the program is built, the flow of data starts from Binance_Websockets.cpp. 
+- It requests the necessary information every few seconds from Binance to build the trend of the chart.
+- This data is pulled from the backend to the frontend, to useCryptoSocket.jsx.
+- useCryptoSocket.jsx pulls which coin to display from Watchlist.jsx and constructs the information needed to make the "candles" for the chart, a way of displaying how much the price of a coin has fluctuated over a given time period, currently set at 1 minute.
+- CandlestickChart.jsx pulls that information and uses it to make and update the candles in the chart that it creates at startup.
+- If a new coin is selected from the Watchlist component, the chart's data is wiped and new candles begin to form with the new coin's datastream. navBar.jsx and ShowPrice.jsx are currently discrete components, but in the future navBar will link to other pages on the app.
+- All of these components, useCryptoSocket, Watchlist, CandlestickChart, navBar, and ShowPrice are called on by App.jsx to build the main page.
+  main.jsx is the entry point of the React application, and pulls everything from App.jsx, rendering on launch.  
 
 *This diagram shows the app’s general data flow*
 ![Diagram](https://github.com/user-attachments/assets/fc51c589-d555-496b-a289-f373603c18da)
