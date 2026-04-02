@@ -51,7 +51,11 @@ This process is enabled by the useCryptoSocket node, which connects to the backe
 
 ## Binance_Websockets complications
 
-The result is a functional but overly complex role for the Binance_Websockets backend; the breadth of problems Binance_Websockets is responsible for has made testing difficult. Binance_Websockets starts a server and responds to a call from the frontend, setting up the WebSocketServer to check if the server is open, and prints information about the connection in the terminal if debug is checked. The behavior is determined when the server opens, currently set to Binance’s Candlestick Data Stream with a 1 minute interval, extra information is culled, and a cleaned JSON is sent to the frontend. A Websocket pointer is created, the URL is set using &coin, when message is received, JSON is parsed and cleaned, the JSON is broken into a string and then sent to the client connected. JSONs are optionally printed to the console if debug is checked, and if a close message is received, the websocket is terminated.  
+The result is a functional but overly complex role for the Binance_Websockets backend; the breadth of problems Binance_Websockets is responsible for has made testing difficult. 
+- Binance_Websockets starts a server and responds to a call from the frontend, setting up the WebSocketServer to check if the server is open, and prints information about the connection in the terminal if debug is checked.
+- The behavior is determined when the server opens, currently set to Binance’s Candlestick Data Stream with a 1 minute interval, extra information is culled, and a cleaned JSON is sent to the frontend.
+- A Websocket pointer is created, the URL is set using &coin, when message is received, JSON is parsed and cleaned, the JSON is broken into a string and then sent to the client connected.
+- JSONs are optionally printed to the console if debug is checked, and if a close message is received, the websocket is terminated.  
 
 Main then takes information about the coin selection and builds a list based on data from the frontend. All information about these coins is then sent to the frontend as a ticker.
 
@@ -61,7 +65,7 @@ Main then takes information about the coin selection and builds a list based on 
 
 ## Separation of Concerns 
 
-To address this complexity, two classes have been created that separate the JSON parsing logic and the Websocket client logic into selectively testable classes. Furthermore, the increase in separation of concerns for these objects allows for the creation of ExchangeClients that handle different hosts than Binance. 
+To address this complexity, two classes have been created that separate the JSON parsing logic and the Websocket client logic into selectively testable classes. Furthermore, the increase in separation of concerns for these objects opens the door for the creation of ExchangeClients that handle different hosts than Binance. 
 
 *A class diagram that shows the fields and functions of the ExchangeClient and BinanceProcessor*
 ![Diagram](https://github.com/user-attachments/assets/41f8d4e2-1b30-4ebd-8407-cd157d521c73)
@@ -82,4 +86,6 @@ Previously, a monolithic test file was used to implement placeholder tests for t
 
 ## Conclusion, Method, Insights
 
-This restructuring has the benefits of simplifying our testing approach, as well as pushing the codebase toward a more coherent and extensible project architecture. Mapping the process for software architecture using written notes and Clip Studio Paint proved too expensive, leading to the diagrams in Obsidian. Using Obsidian's Excalidraw plugin is a step up from drawing diagrams by hand, as it allows you to pick up lines and reconnect flow between diagrams. However manually connecting diagrams with a mouse does not scale well, and despite Obsidian Excalidraw's lower learning curve than PlantUML ; the rate at which PlantUML speeds up the process of creation, along with the ability to refactor diagrams as a codebase, makes PlantUML a superior tool for Agile development.
+This restructuring has the benefits of simplifying our testing approach, as well as pushing the codebase toward a more coherent and extensible project architecture. 
+
+   Mapping the process for software architecture using written notes and Clip Studio Paint proved too expensive, leading to the diagrams in Obsidian. Using Obsidian's Excalidraw plugin is a step up from drawing diagrams by hand, as it allows you to pick up lines and reconnect flow between diagrams. However manually connecting diagrams with a mouse does not scale well, and despite Obsidian Excalidraw's lower learning curve than PlantUML ; the rate at which PlantUML speeds up the process of creation, along with the ability to refactor diagrams as a codebase, makes PlantUML a superior tool for Agile development.
