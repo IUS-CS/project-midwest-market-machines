@@ -117,7 +117,7 @@ int main() {
   // vector.
   for (const string &coin : coins) {
     auto client = make_unique<ExchangeClient>();
-    client->setDEBUG(true);
+    client->SetDEBUG(true);
     client->SetCallback([](const string &msg) {
       BinanceProcessor Processor;
       json received = json::parse(msg);

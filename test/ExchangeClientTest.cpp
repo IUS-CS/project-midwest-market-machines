@@ -374,7 +374,7 @@ TEST_F(ExchangeClientTest, ClientSocketCloses) {
   Client.HandleMessages(FakeMessages(ix::WebSocketMessageType::Close));
 
   ASSERT_EQ(Future.wait_for(chrono::seconds(1)), future_status::ready);
-  ASSERT_EQ(Client.getState(), ix::ReadyState::Closed);
+  ASSERT_EQ(Client.GetState(), ix::ReadyState::Closed);
   EXPECT_TRUE(Future.get());
 }
 
@@ -403,7 +403,7 @@ TEST_F(ExchangeClientTest, ClientSocketErrors) {
 
   Client.SetOnError([&Error, &ErrorState, &Client](const string &msg) {
     Error.set_value(true);
-    ErrorState.set_value(Client.getState());
+    ErrorState.set_value(Client.GetState());
   });
   Client.Connect(stream);
   Client.HandleMessages(FakeMessages(ix::WebSocketMessageType::Error, ""));
