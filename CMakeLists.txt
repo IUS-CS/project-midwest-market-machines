@@ -15,6 +15,11 @@ if(POLICY CMP0135)
 endif()
 
 if(WIN32)
+  add_compile_definitions(_HAS_STD_BYTE=0)
+  link_libraries(bcrypt ws2_32 crypt32)
+  set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
+  set(X_VCPKG_APPLOCAL_DEPS ON)
+
   # Auto vcpkg setup: clones, bootstraps, needs to load before project() call
   set(VCPKG_ROOT "${CMAKE_SOURCE_DIR}/vcpkg")
   if(NOT EXISTS "${VCPKG_ROOT}")
@@ -24,6 +29,10 @@ if(WIN32)
 
   set(CMAKE_TOOLCHAIN_FILE "${VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake" CACHE STRING "" FORCE)
   execute_process(COMMAND "${VCPKG_ROOT}/vcpkg" install zlib mbedtls)
+
+  set(NPM_CMD npm.cmd)                      # Alias `npm.cmd` to `NPM_CMD`. `npm` needs `.cmd` on WIN32.
+else()
+  set(NPM_CMD npm)                          # Other systems do not need `npm.cmd`, where `npm` will suffice.
 endif()
 
 project(Binance_Websockets)                # Specify the project's name. Append `.exe` if needed.
@@ -90,14 +99,22 @@ FetchContent_MakeAvailable(googletest)      # Fetch googletestt.
 FetchContent_MakeAvailable(webview)         # Fetch webview.
 #####################################################################################################################
 
-if(WIN32)
-  link_libraries(bcrypt)                    # Required for Windows Cryptography/SSL support.
-endif()
+add_custom_target(
+  npm_build
+  COMMAND ${NPM_CMD} run build
+  WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/MarketUI"
+  VERBATIM
+)
 
 add_executable(
   Binance_Websockets
   src/Binance_Websockets.cpp
 )                                           # add_executable(<project>, <source>)
+
+add_dependencies(
+  Binance_Websockets
+  npm_build
+)
 
 target_link_libraries(
   Binance_Websockets
@@ -105,11 +122,6 @@ target_link_libraries(
   ixwebsocket
   webview::core
 )                                           # link <project> with <library> <library>
-
-add_executable(
-  Risk_Analyzer
-  src/Risk_Analyzer.cpp
-)
 
 ######################################################################################################################
 
@@ -131,6 +143,19 @@ add_executable(
   test/ExchangeClientTest.cpp
 )
 
+if(WIN32)
+  target_link_libraries(
+  ExchangeClientTest
+  PRIVATE
+  gtest
+  GTest::gtest_main
+  GTest::gmock
+  GTest::gmock_main
+  nlohmann_json::nlohmann_json
+  ixwebsocket
+  bcrypt
+)
+else()
 target_link_libraries(
   ExchangeClientTest
   PRIVATE
@@ -141,6 +166,7 @@ target_link_libraries(
   nlohmann_json::nlohmann_json
   ixwebsocket
 )
+endif()
 
 target_include_directories(
   ExchangeClientTest
