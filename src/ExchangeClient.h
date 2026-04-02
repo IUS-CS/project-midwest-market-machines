@@ -4,7 +4,11 @@
  *
  * ExchangeClient.h
  *
- * This header file creates the ExchangeClient class.
+ * This header file creates the ExchangeClient class. The ExchangeClient class
+ * is designed to simplify the work of setting up a socket with a given
+ * Exchange.
+ *
+ *
  * The ExchangeClient class contains a protected method:
  *    1. HandleMessages(const ix::WebSocketMessagePtr &msg)
  *        - Defines which function to call on which message type.
