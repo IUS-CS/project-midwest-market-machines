@@ -54,6 +54,8 @@
 
 using WebSocket = ix::WebSocket;
 using json = nlohmann::json;
+using MessagePtr = ix::WebSocketMessagePtr;
+using MessageType = ix::WebSocketMessageType;
 using namespace std;
 
 class ExchangeClient {
@@ -67,14 +69,14 @@ protected:
    * For each type of message we care about, we make a call to the defined
    * OnType() function.
    */
-  void HandleMessages(const ix::WebSocketMessagePtr &msg) {
+  void HandleMessages(const MessagePtr &msg) {
     switch (msg->type) {
-    case ix::WebSocketMessageType::Open:
+    case MessageType::Open:
       if (OnOpen) {
         OnOpen();
       }
       break;
-    case ix::WebSocketMessageType::Message:
+    case MessageType::Message:
       if (OnCallback) {
         OnCallback(msg->str);
       }
@@ -84,13 +86,13 @@ protected:
         PrintLocker.unlock();
       }
       break;
-    case ix::WebSocketMessageType::Close:
+    case MessageType::Close:
       if (OnClose) {
         OnClose();
       }
       socket.close();
       break;
-    case ix::WebSocketMessageType::Error:
+    case MessageType::Error:
       if (OnError) {
         OnError(msg->errorInfo.reason);
       }
@@ -179,9 +181,7 @@ public:
     }
 
     socket.setOnMessageCallback(
-        [this](const ix::WebSocketMessagePtr &msg) -> void {
-          HandleMessages(msg);
-        });
+        [this](const MessagePtr &msg) -> void { HandleMessages(msg); });
     socket.start();
   }
 };
