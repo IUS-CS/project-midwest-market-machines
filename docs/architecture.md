@@ -1,9 +1,10 @@
 ## Introduction
 
-Our project consists of a React-based frontend that handles the User Interface which is connected to a C++ backend. Currently the frontend is built by using terminal commands to pull and install node js packages necessary to the project. However, the backend, because it is built in C++, requires a more comprehensive approach. To build the backend, an OS aware file pulls necessary libraries from their repositories, bootstraps, builds, and links the files. The commands can be automated using .bat, .ps1, .sh, scripts, however due to the changing build environment we have not implemented a 1 click install system yet.
+Our project consists of a React-based frontend that handles the User Interface which is connected to a C++ backend. Currently the frontend is built by using terminal commands to pull and install node js packages necessary for the project. However, the backend, because it is built in C++, requires a more comprehensive approach. To build the backend, an OS aware file pulls necessary libraries from their repositories, bootstraps, builds, and links the files. The commands can be automated using .bat, .ps1, .sh, scripts, however due to the changing build environment we have not implemented a 1 click install system yet.
 
 *An activity diagram that shows the logic of the app when building with an OS aware file*
-![Diagram](https://github.com/user-attachments/assets/7f0cf3d2-7c0b-4351-8341-c45b454366d2)
+![Diagram](https://github.com/user-attachments/assets/c90949e3-7274-429b-bb43-62fae4602482
+)
 
 
 ## Project Overview
