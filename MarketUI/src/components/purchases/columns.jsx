@@ -3,7 +3,7 @@
  * This file defines the columns to be used in PurchasesTable.
 */
 
-"use client"
+//"use client"
 
 export const columns = [
   {
@@ -16,10 +16,14 @@ export const columns = [
   },
   {
     accessorKey: "date",
-    header: "date",
+    header: "Date",
+  },
+  {
+    accessorKey: "time",
+    header: "Time",
   },
   {
     accessorKey: "price",
-    header: "price",
+    header: "Price",
   },
 ]

@@ -1,7 +1,10 @@
-/*
+/* PurchasesTable.jsx
+ *
+ * This component is the purchases table, which displays the user's
+ * current holdings. Derives its columns from columns.jsx
  */
 
-"use client"
+//"use client";
 
 import {
   flexRender,
@@ -18,7 +21,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 
-export function DataTable({ columns, data }) {
+export function PurchasesTable({ columns, data }) {
   const table = useReactTable({
     data,
     columns,
@@ -72,3 +75,5 @@ export function DataTable({ columns, data }) {
     </div>
   )
 }
+
+export default PurchasesTable
