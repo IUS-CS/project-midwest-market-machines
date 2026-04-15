@@ -1,10 +1,25 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import './App.css'
 import Navbar from './components/navBar'
 import Watchlist from './components/Watchlist'
 import useCryptoSocket from './useCryptoSocket'
 import ShowPrice from './components/ShowPrice'
 import CandlestickChart from './components/CandlestickChart'
+import { columns } from './components/purchases/columns'
+import PurchasesTable from './components/purchases/PurchasesTable'
+
+
+async function getData() {
+  return [
+    {
+      coin: "BTC",
+      quantity: 0.00568,
+      date: "14 April 2026",
+      time: 1776220427,
+      price: 74336.94,
+    },
+  ]
+}
 /*
   Main component, coordinates other files by connecting 
   1. (currentCoin) state which defaults to BTCUSDT->
@@ -15,10 +30,20 @@ import CandlestickChart from './components/CandlestickChart'
   5b. and the rest of the data, such as start time and KlineFinished, is sent to the CandlestickChart component.
 */
 function App() {
-/* (1) Initialization: Sets the starting coin and establishes the socket connection */
+  /* (1) Initialization: Sets the starting coin and establishes the socket connection */
   const [currentCoin, setCurrentCoin] = useState('BTCUSDT');
   /* (4) Data Channel: WebSocket hook listens for changes to currentCoin and returns price */
-  const { price, latestCandle} = useCryptoSocket(currentCoin);
+  const { price, latestCandle } = useCryptoSocket(currentCoin);
+
+  const [data, setData] = useState([]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      const result = await getData();
+      setData(result);
+    };
+    fetchData();
+  }, []);
 
   return (
     <>
@@ -38,6 +63,9 @@ function App() {
           {/* (5b Rendered Output: CandlestickChart receives the data necessary to create and update the candles)*/}
           <CandlestickChart coin={currentCoin} latestCandle={latestCandle} />
         </div>
+      </div>
+      <div className="container mx-auto py-10">
+        <PurchasesTable columns={columns} data={data} />
       </div>
     </>
   )
