@@ -50,6 +50,8 @@ export default defineConfig({
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
+      "react": path.resolve(__dirname, "./node_modules/react/"),
+      "react-dom": path.resolve(__dirname, "./node_modules/react-dom/")
     },
   },
   base: './',
@@ -57,4 +59,5 @@ export default defineConfig({
     minify: false,
     sourcemap: true,
   },
+  dedupe: ['react', 'react-dom']
 })
