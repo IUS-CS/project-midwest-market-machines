@@ -15,7 +15,7 @@ export const columns = [
       return (
         <Button
           variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() == "asc")}
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
         >
           Coin
           <ArrowUpDown className="ml-2 h-4 w-4" />
@@ -29,7 +29,7 @@ export const columns = [
       return (
         <Button
           variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() == "asc")}
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
         >
           Quantity
           <ArrowUpDown className="ml-2 h-4 w-4" />
@@ -43,7 +43,7 @@ export const columns = [
       return (
         <Button
           variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() == "asc")}
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
         >
           Date
           <ArrowUpDown className="ml-2 h-4 w-4" />
@@ -58,7 +58,7 @@ export const columns = [
       return (
         <Button
           variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() == "asc")}
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
         >
           Time
           <ArrowUpDown className="ml-2 h-4 w-4" />
@@ -74,7 +74,7 @@ export const columns = [
         <div className="text-right">
           <Button
             variant="ghost"
-            onClick={() => column.toggleSorting(column.getIsSorted() == "asc")}
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
           >
             Price
             <ArrowUpDown className="ml-2 h-4 w-4" />
