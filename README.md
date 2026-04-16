@@ -25,6 +25,7 @@ PowerShell
 ```PowerShell
 Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass # Included from Step 2.
 npm install --legacy-peer-deps                             # Install but ignore peer dependency conflicts.
+npm install @emailjs/browser                               # Install EmailJS SDK.
 npm run build                                              # Build the frontend to `dist/index.html`
 ```
 
@@ -32,6 +33,7 @@ Bash
 
 ```bash
 npm install
+npm install @emailjs/browser                  # Install EmailJS SDK.
 npm run build                                 # Build the frontend to `dist/index.html`
 ```
 
