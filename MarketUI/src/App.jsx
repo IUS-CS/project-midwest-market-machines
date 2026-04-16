@@ -5,6 +5,7 @@ import Watchlist from './components/Watchlist'
 import useCryptoSocket from './useCryptoSocket'
 import ShowPrice from './components/ShowPrice'
 import CandlestickChart from './components/CandlestickChart'
+import ChatBox from './components/ChatBox'
 /*
   Main component, coordinates other files by connecting 
   1. (currentCoin) state which defaults to BTCUSDT->
@@ -39,6 +40,9 @@ function App() {
           <CandlestickChart coin={currentCoin} latestCandle={latestCandle} />
         </div>
       </div>
+      
+      {/* AI Trading Assistant ChatBox */}
+      <ChatBox />
     </>
   )
 }
