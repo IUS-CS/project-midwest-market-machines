@@ -5,6 +5,8 @@ import Watchlist from './components/Watchlist'
 import useCryptoSocket from './useCryptoSocket'
 import ShowPrice from './components/ShowPrice'
 import CandlestickChart from './components/CandlestickChart'
+import About from './components/About'
+import Contact from './components/Contact'
 /*
   Main component, coordinates other files by connecting 
   1. (currentCoin) state which defaults to BTCUSDT->
@@ -15,15 +17,19 @@ import CandlestickChart from './components/CandlestickChart'
   5b. and the rest of the data, such as start time and KlineFinished, is sent to the CandlestickChart component.
 */
 function App() {
-/* (1) Initialization: Sets the starting coin and establishes the socket connection */
+  /* (1) Initialization: Sets the starting coin and establishes the socket connection */
   const [currentCoin, setCurrentCoin] = useState('BTCUSDT');
   /* (4) Data Channel: WebSocket hook listens for changes to currentCoin and returns price */
   const { price, latestCandle} = useCryptoSocket(currentCoin);
+  /*     Page Navigation: Tracks which page should currently be displayed */
+  const [page, setPage] = useState('home');
 
   return (
     <>
-      <Navbar />
+      <Navbar setPage={setPage} />
 
+      {page === 'home' && (
+        <>
       <div className="App_header">
         <h1>Simple Trade</h1>
         <p>Your one-stop shop for all things crypto!</p>
@@ -40,6 +46,11 @@ function App() {
         </div>
       </div>
     </>
+    )}
+
+      {page === 'about' && <About />}
+      {page === 'contact' && <Contact />} 
+    </>  
   )
 }
 
