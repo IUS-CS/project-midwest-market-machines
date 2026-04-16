@@ -80,3 +80,72 @@ body {
   min-width: 0; /* Prevents overflow from other elements */
 }
 
+/* About page */
+.about {
+  max-width: 900px;
+  margin: 40px auto;
+  text-align: center;
+}
+.about p, a {
+  font-size: 1.1rem;
+  line-height: 1.6;
+  text-align: left;
+  margin-bottom: 18px;
+}
+.about ul {
+  text-align: left;
+  display: inline-block;
+  margin-top: 10px;
+}
+.about li {
+  margin-bottom: 6px;
+}
+
+/* Contact Page */
+.contact {
+  text-align: center;
+  width: 400px;
+  margin: 0 auto;
+}
+/* Contact Form Window */
+.contact-form-box {
+  width: 90%;
+  max-width: 450px;
+  margin: 30px auto;
+  padding: 25px;
+
+  background: #111827;
+  border-radius: 12px;
+
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+/* Contact Form Window and Text Area */
+.contact-form-box input,
+.contact-form-box textarea {
+  width: 100%;
+  padding: 12px;
+  border: 2px solid rgb(0, 0, 0);
+  border-radius: 8px;
+  background-color: white;
+  color: black;
+  font-size: 1rem;
+  box-sizing: border-box;
+}
+/* self explanatory block */
+.contact-form-box textarea {
+  resize: vertical;
+  min-height: 120px;
+}
+/* Contact Submit Button */
+.contact-form-box button {
+  padding: 12px;
+  border: none;
+  border-radius: 8px;
+  background-color: #1a2f57;
+  color: white;
+  font-weight: bold;
+  cursor: pointer;
+  box-sizing: border-box;
+}
