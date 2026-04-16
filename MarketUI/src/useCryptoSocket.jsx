@@ -36,6 +36,7 @@ const useCryptoSocket = (selectedCoin) => {
   useEffect(() => {
     const socket = new WebSocket(SOCKET_URL);
 
+    // Will receive `last: <bool : is last?> on last holdings JSON`
     let isStartup = true;
 
     socket.onmessage = (event) => {
@@ -53,13 +54,13 @@ const useCryptoSocket = (selectedCoin) => {
        */
       if (isStartup) {
         setHoldings((prev) => [...prev, {
-          coin: data.coin,
-          quantity: data.quantity,
-          time: data.time,
-          price: data.price
+          coin: jsonReceived.coin,
+          quantity: jsonReceived.quantity,
+          time: jsonReceived.time,
+          price: jsonReceived.price
         }]);
 
-        if (data.last === true) {
+        if (jsonReceived.last === true) {
           isStartup = false;
           console.log("Got last holding.");
         }
@@ -116,7 +117,7 @@ const useCryptoSocket = (selectedCoin) => {
 
   }, [lastJsonMessage, selectedCoin]);
 
-  return { price, latestCandle };
+  return { price, latestCandle, holdings };
 };
 
 export default useCryptoSocket;
