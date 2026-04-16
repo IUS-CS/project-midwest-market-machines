@@ -6,10 +6,13 @@
 
 //"use client";
 
+import { useState } from "react"
+
 import {
   flexRender,
   getCoreRowModel,
   getPaginationRowModel,
+  getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table"
 
@@ -23,13 +26,20 @@ import {
 } from "@/components/ui/table"
 
 import { Button } from "@/components/ui/button"
+import * as React from "react"
 
 export function PurchasesTable({ columns, data }) {
+  const [sorting, setSorting] = useState([]);
   const table = useReactTable({
     data,
     columns,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
+    onSortingChange: setSorting,
+    getSortedRowModel: getSortedRowModel(),
+    state: {
+      sorting,
+    },
   })
 
   return (
