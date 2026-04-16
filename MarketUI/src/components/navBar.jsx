@@ -13,9 +13,9 @@ const Navbar = () => {
       <div className="navbar-spacer" />
 
         <ul className="navbar-links">
-          <li><a href="#">Home</a></li>
-          <li><a href="#">About</a></li>
-          <li><a href="#">Contact</a></li>
+          <li><a href="#" onClick={() => setPage("home")}>Home</a></li>
+          <li><a href="#" onClick={() => setPage("about")}>About</a></li>
+          <li><a href="#" onClick={() => setPage("contact")}>Contact</a></li>
         </ul>
       </nav>
     </div>
