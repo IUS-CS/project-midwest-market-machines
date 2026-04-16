@@ -5,21 +5,27 @@ Backend websocket connection.
 */
 const useCryptoSocket = (selectedCoin) => {
   const [price, setPrice] = useState(null);
+  const [latestCandle, setLatestCandle] = useState(null);
+  const [lastJsonMessage, setLastJsonMessage] = useState(null);
+  const [holdings, setHoldings] = useState([]);
+
   const SOCKET_URL = "ws://127.0.0.1:8080";
 
-  const [latestCandle, setLatestCandle] = useState(null)
   const candleMapRef = useRef(new Map());
-  const lastCloseRef = useRef(null)
+  const lastCloseRef = useRef(null);
   const prevCoinRef = useRef(null);
-  const [lastJsonMessage, setLastJsonMessage] = useState(null);
 
   /* useEffect() for WebSocket socket.
    *
    * 1. Define WebSocket socket with SOCKET_URL.
+   * 2. Set bool isStartup = true.
    * 2. Define the socket's onmessage behavior.
-   *    - In this case...
-   *    - Parse the received JSON.
-   *    - setLastJsonMessage for the new JSON.
+   *    2a. Parse the received JSON into jsonReceived
+   *    2b. Check if isStartup.
+   *        - setHoldings with received data.
+   *        - Set isStartup = false if last = true.
+   *    2c. If it's a kline...
+   *        - setLastJsonMessage with the received JSON.
    * 3. Close the socket when finished.
    *
    * '[]' set to run this useEffect only once on startup.
@@ -30,10 +36,41 @@ const useCryptoSocket = (selectedCoin) => {
   useEffect(() => {
     const socket = new WebSocket(SOCKET_URL);
 
+    let isStartup = true;
+
     socket.onmessage = (event) => {
       const jsonReceived = JSON.parse(event.data);
-      setLastJsonMessage(jsonReceived);
-    }
+
+      /* For startup, we expect this:
+       *
+       * {
+       *    coin: <coin>,
+       *    quantity: <quantity>,
+       *    time: <UNIX time>,
+       *    price: <price>,
+       *    last: <bool : is last?>
+       * }
+       */
+      if (isStartup) {
+        setHoldings((prev) => [...prev, {
+          coin: data.coin,
+          quantity: data.quantity,
+          time: data.time,
+          price: data.price
+        }]);
+
+        if (data.last === true) {
+          isStartup = false;
+          console.log("Got last holding.");
+        }
+        return;
+      }
+
+      if (data.Kline) {
+        setLastJsonMessage(jsonReceived);
+      }
+    };
+
     return () => socket.close();
   }, []);
 
