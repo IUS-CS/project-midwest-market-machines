@@ -16,12 +16,16 @@
 
 // Minimum necessary includes
 #include "BinanceProcessor.h"
+#include "Database_Handler.h"
 #include "ExchangeClient.h"
+
 #include "webview/webview.h"
 #include <filesystem>
 #include <ixwebsocket/IXWebSocketServer.h>
 #include <nlohmann/json.hpp>
 #include <thread>
+#include <string>
+#include <sstream>
 
 //  Quality of life statements. All are unneccessary, strictly speaking.
 using json = nlohmann::json;
@@ -41,23 +45,52 @@ WebSocketServer Server(8080, "127.0.0.1");
  * This function sets the server's behavior on message callback, and
  * starts the server.
  *
- * Message callback behavior needs to be set to avoid a warning from
- * ixwebsockets, but we don't need the server to do anything yet, so that method
- * just has an empty body.
- *
- * As in - "No behavior please."
- *
+ * Callback from the frontend of MessageType::Open tells the Database_Handler that the frontend is ready,
+ * prompting the Database_Handler to send all holdings data through to the frontend.
+ * 
+ *Callback from the frontend of MessageType::Message writes valid transactions to the database.csv file 
+ * by contstruction a stringstream of the transaction data, and passing it to the Database_Handler's writeTransaction() method.
+ *  
+ * Valid transactions are JSON objects with a "type" field of 
+ * "buy" or "sell", 
+ * "coin", 
+ * "price",
+ * "quantity", and
+ * "time" - time(0) from time.h sends a simple UNIX timestamp, preventing the need for a separate time library like <chrono>.
+ * 
  * Important: StartServer() uses Server.listenAndStart(), which is a BLOCKING
  * call. If you are to later try and join a server thread, you must first call
  * Server.stop().
  */
 void StartServer() {
-  Server.setOnClientMessageCallback(
-      [](shared_ptr<ix::ConnectionState> connectionState, WebSocket &webSocket,
-         const MessagePtr &msg) {});
-
-  // Blocking call - need to explicitly call Server.stop() later.
-  Server.listenAndStart();
+Server.setOnClientMessageCallback(
+[](shared_ptr<ix::ConnectionState> connectionState, WebSocket &webSocket, const MessagePtr &msg) {
+    if (msg->type == ix::WebSocketMessageType::Open) {
+        Database_Handler db;
+        db.sendHoldingsData(webSocket);
+    }
+    if (msg->type == ix::WebSocketMessageType::Message) 
+    {
+        try {
+            nlohmann::json incoming = nlohmann::json::parse(msg->str);
+            if (incoming.contains("type")) {
+                string transactionType = incoming["type"];
+                if (transactionType == "buy" || transactionType == "sell") {
+                    Database_Handler db; std::stringstream ss;
+                    ss << 
+                    transactionType << "," << 
+                    incoming["coin"] << "," << 
+                    incoming["price"] << "," << 
+                    incoming["quantity"] << "," << 
+                    time(0);
+                    db.writeTransaction(ss.str());
+                }
+            }
+        } catch (const std::exception &e) {
+            std::cerr << "Failed to parse message: " << msg->str << std::endl;}
+    }
+});
+    Server.listenAndStart();
 }
 
 /* void StartWebview()
