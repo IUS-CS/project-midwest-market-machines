@@ -83,7 +83,7 @@ Server.setOnClientMessageCallback(
                     incoming["price"] << "," << 
                     incoming["quantity"] << "," << 
                     time(0);
-                    db.writeTransaction(ss.str());
+                    db.recordTransaction(ss.str());
                 }
             }
         } catch (const std::exception &e) {
