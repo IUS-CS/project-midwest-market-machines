@@ -21,7 +21,7 @@ public:
      * to the end of the CSV database.
      */
     inline void recordTransaction(const std::string& transactionData) {
-        std::ofstream file("database.csv", std::ios::app);
+        std::ofstream file("../database.csv", std::ios::app);
         if (file.is_open()) {
             file << transactionData << std::endl;
         }
@@ -33,7 +33,7 @@ public:
     * Websocket. Final line has "last": true to tell the other component that the file is done.
     */
     inline void sendHoldingsData(ix::WebSocket& webSocket) {
-        std::ifstream file("database.csv");
+        std::ifstream file("../database.csv");
         std::string line;
         std::vector<nlohmann::json> userHoldings;
 
