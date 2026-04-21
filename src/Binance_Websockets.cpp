@@ -51,12 +51,12 @@ WebSocketServer Server(8080, "127.0.0.1");
  *Callback from the frontend of MessageType::Message writes valid transactions to the database.csv file 
  * by contstruction a stringstream of the transaction data, and passing it to the Database_Handler's writeTransaction() method.
  *  
- * Valid transactions are JSON objects with a "type" field of 
- * "buy" or "sell", 
- * "coin", 
- * "price",
- * "quantity", and
- * "time" - time(0) from time.h sends a simple UNIX timestamp, preventing the need for a separate time library like <chrono>.
+ * Valid transactions are JSON objects with fields: 
+ * "type" - e.g. "buy" or "sell", 
+ * "coin" - "BTC"
+ * "price" - "73583"
+ * "quantity" - "0.02156"
+ * "time" - "1776304858"
  * 
  * Important: StartServer() uses Server.listenAndStart(), which is a BLOCKING
  * call. If you are to later try and join a server thread, you must first call
