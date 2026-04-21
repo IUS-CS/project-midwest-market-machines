@@ -71,23 +71,18 @@ Server.setOnClientMessageCallback(
     }
     if (msg->type == ix::WebSocketMessageType::Message) 
     {
-        try {
-            nlohmann::json incoming = nlohmann::json::parse(msg->str);
-            if (incoming.contains("type")) {
-                string transactionType = incoming["type"];
-                if (transactionType == "buy" || transactionType == "sell") {
-                    Database_Handler db; std::stringstream ss;
-                    ss << 
-                    transactionType << "," << 
-                    incoming["coin"] << "," << 
-                    incoming["price"] << "," << 
-                    incoming["quantity"] << "," << 
-                    time(0);
-                    db.recordTransaction(ss.str());
-                }
+        nlohmann::json incoming = nlohmann::json::parse(msg->str);
+        string transactionType = incoming["type"];
+            if (transactionType == "buy" || transactionType == "sell") {
+                Database_Handler db; std::stringstream ss;
+                ss << 
+                transactionType << "," << 
+                incoming["coin"] << "," << 
+                incoming["price"] << "," << 
+                incoming["quantity"] << "," << 
+                time(0);
+                db.recordTransaction(ss.str());
             }
-        } catch (const std::exception &e) {
-            std::cerr << "Failed to parse message: " << msg->str << std::endl;}
     }
 });
     Server.listenAndStart();
