@@ -65,13 +65,13 @@ WebSocketServer Server(8080, "127.0.0.1");
 void StartServer() {
 Server.setOnClientMessageCallback(
 [](shared_ptr<ix::ConnectionState> connectionState, WebSocket &webSocket, const MessagePtr &msg) {
-    if (msg->type == ix::WebSocketMessageType::Open) {
+    if (msg->type == MessageType::Open) {
         Database_Handler db;
         db.sendHoldingsData(webSocket);
     }
-    if (msg->type == ix::WebSocketMessageType::Message) 
+    if (msg->type == MessageType::Message) 
     {
-        nlohmann::json incoming = nlohmann::json::parse(msg->str);
+        json incoming = json::parse(msg->str);
         string transactionType = incoming["type"];
             if (transactionType == "buy" || transactionType == "sell") {
                 Database_Handler db; std::stringstream ss;
