@@ -21,7 +21,6 @@
 #include "BinanceProcessor.h"
 #include "Database_Handler.h"
 #include "ExchangeClient.h"
-
 #include "webview/webview.h"
 #include <filesystem>
 #include <ixwebsocket/IXWebSocketServer.h>
@@ -63,7 +62,8 @@ void StartServer() {
   Server.setOnClientMessageCallback(
       [](shared_ptr<ix::ConnectionState> connectionState, WebSocket &webSocket,
          const MessagePtr &msg) {});
-      // Blocking call - need to explicitly call Server.stop() later.
+
+    // Blocking call - need to explicitly call Server.stop() later.
     Server.listenAndStart();
 }
 
@@ -179,14 +179,16 @@ int main() {
             client->send(shortened.dump(0));
           }
       });
+
     // Build the desired uri to connect to.
     string uri = "wss://stream.binance.us:9443/ws/" + coin + "@kline_1m";
+
     // Connect a client, and place it on the back of the vector.
     // emplace_back() moves it to the end of the vector without rebuilding it.
     clientThreadsVector.emplace_back(
         [client = client.get(), uri]() { client->Connect(uri); });
 
-        ExchangeClientPointersVector.push_back(move(client));
+    ExchangeClientPointersVector.push_back(move(client));
     }
 
   // Build relative filepath to the frontend's index.html build artifact.
@@ -196,20 +198,20 @@ int main() {
 
   // Abstracts webview details out of main.
   // In this way, we could launch multiple webviews if desired.
-    StartWebview(FrontendPath);
+  StartWebview(FrontendPath);
 
   /* Server.listenAndStart() is a blocking call.
    * We need to explicitly call for the servers' death.
    * Then, join the threads and exit.
    */
-    Server.stop();
-    DatabaseServer.stop();
-    ServerThread.join();
-    DatabaseThread.join();
+  Server.stop();
+  DatabaseServer.stop();
+  ServerThread.join();
+  DatabaseThread.join();
 
-    for (auto &client : clientThreadsVector) {
-        client.join();
-    }
+  for (auto &client : clientThreadsVector) {
+    client.join();
+  }
 
-    return 0;
+  return 0;
 }
