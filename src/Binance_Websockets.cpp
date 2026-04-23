@@ -3,11 +3,13 @@
  * The Simple Trade App
  *
  * Hunter William Poole
- *
+ * Xavier Olsen
+ * 
  * Binance_Websockets.cpp
  *
- * This program spawns one WebSocket server to communicate with the front end,
- * and [x] WebSocket clients to communicate with Binance for [x] number of
+ * This program spawns two WebSocket servers to communicate with the front end:
+ * one for live market data, and one for user/historical data.
+ * It also spawns [x] WebSocket clients to communicate with Binance for [x] number of
  * coin. Default coins are used as a stand-in.
  *
  * Will subscribe to the Candestick Data Stream from Binance, and passes the
@@ -15,6 +17,7 @@
  */
 
 // Minimum necessary includes
+
 #include "BinanceProcessor.h"
 #include "Database_Handler.h"
 #include "ExchangeClient.h"
@@ -37,13 +40,37 @@ using WebView = webview::webview;
 using namespace std;
 
 //-------------------Global Declarations--------------------
-WebSocketServer Server(8080, "127.0.0.1");
+WebSocketServer Server(8080, "127.0.0.1");         // Live market data
+WebSocketServer DatabaseServer(8081, "127.0.0.1"); // User/historical data
 //----------------------------------------------------------
 
 /* void StartServer()
  *
  * This function sets the server's behavior on message callback, and
  * starts the server.
+ *
+ * Message callback behavior needs to be set to avoid a warning from
+ * ixwebsockets, but we don't need the server to do anything yet, so that method
+ * just has an empty body.
+ *
+ * As in - "No behavior please."
+ *
+ * Important: StartServer() uses Server.listenAndStart(), which is a BLOCKING
+ * call. If you are to later try and join a server thread, you must first call
+ * Server.stop().
+ */
+void StartServer() {
+  Server.setOnClientMessageCallback(
+      [](shared_ptr<ix::ConnectionState> connectionState, WebSocket &webSocket,
+         const MessagePtr &msg) {});
+      // Blocking call - need to explicitly call Server.stop() later.
+    Server.listenAndStart();
+}
+
+/* void StartDatabaseServer()
+ *
+ * This function sets the server's behavior on message callback over port 8081, and
+ * starts the database's server.
  *
  * Callback from the frontend of MessageType::Open tells the Database_Handler that the frontend is ready,
  * prompting the Database_Handler to send all holdings data through to the frontend.
@@ -56,36 +83,34 @@ WebSocketServer Server(8080, "127.0.0.1");
  * "coin" - "BTC"
  * "price" - "73583"
  * "quantity" - "0.02156"
- * "time" - "1776304858"
  * 
  * Important: StartServer() uses Server.listenAndStart(), which is a BLOCKING
  * call. If you are to later try and join a server thread, you must first call
  * Server.stop().
  */
-void StartServer() {
-Server.setOnClientMessageCallback(
-[](shared_ptr<ix::ConnectionState> connectionState, WebSocket &webSocket, const MessagePtr &msg) {
-    if (msg->type == MessageType::Open) {
+void StartDatabaseServer() {
+    DatabaseServer.setOnClientMessageCallback(
+    [](shared_ptr<ix::ConnectionState> connectionState, WebSocket &webSocket, const MessagePtr &msg) {
         Database_Handler db;
-        db.sendHoldingsData(webSocket);
-    }
-    if (msg->type == MessageType::Message) 
-    {
-        json incoming = json::parse(msg->str);
-        string transactionType = incoming["type"];
-            if (transactionType == "buy" || transactionType == "sell") {
-                Database_Handler db; std::stringstream ss;
-                ss << 
-                transactionType << "," << 
-                incoming["coin"] << "," << 
-                incoming["price"] << "," << 
-                incoming["quantity"] << "," << 
-                time(0);
-                db.recordTransaction(ss.str());
-            }
-    }
-});
-    Server.listenAndStart();
+        if (msg->type == MessageType::Open) {
+            db.sendHoldingsData(webSocket);
+            db.sendTransactionHistory(webSocket);
+            db.sendHistoricalData(webSocket, "btcusdt");
+            db.sendHistoricalData(webSocket, "ethusdt");
+            db.sendHistoricalData(webSocket, "adausdt");
+            db.sendHistoricalData(webSocket, "xrpusdt");
+            db.sendHistoricalData(webSocket, "dotusdt");
+            db.sendHistoricalData(webSocket, "uniusdt");
+        }
+        if (msg->type == MessageType::Message) {
+                json incoming = json::parse(msg->str);
+                string transactionType = incoming["type"].get<std::string>();
+                if (transactionType == "buy" || transactionType == "sell") {
+                    db.recordTransaction(&incoming);
+                }
+        }
+    });
+    DatabaseServer.listenAndStart();
 }
 
 /* void StartWebview()
@@ -108,11 +133,11 @@ Server.setOnClientMessageCallback(
  * 5. Then, run the window.
  */
 void StartWebview(filesystem::path FrontendPath) {
-  WebView Window(true, nullptr);
-  Window.set_title("Simple Trade");
-  Window.set_size(1200, 800, WEBVIEW_HINT_NONE);
-  Window.navigate("file://" + FrontendPath.generic_string());
-  Window.run();
+    WebView Window(true, nullptr);
+    Window.set_title("Simple Trade");
+    Window.set_size(1200, 800, WEBVIEW_HINT_NONE);
+    Window.navigate("file://" + FrontendPath.generic_string());
+    Window.run();
 }
 
 /* int main()
@@ -131,10 +156,11 @@ int main() {
   // Holds the names of coins.
   // Also known as the <ticker> or <symbol>.
   vector<string> coins = {"btcusdt", "ethusdt", "adausdt",
-                          "xrpusdt", "dotusdt", "uniusdt"};
+                            "xrpusdt", "dotusdt", "uniusdt"};
 
-  // Spawn the server in a thread.
+  // Spawn the servers in respective threads.
   thread ServerThread(StartServer);
+  thread DatabaseThread(StartDatabaseServer);
 
   // Keep-alive vectors. Save *outside of* the loop.
   vector<unique_ptr<ExchangeClient>> ExchangeClientPointersVector;
@@ -143,27 +169,25 @@ int main() {
   // For each coin make a unique client, setDEBUG, setCallback and put on
   // vector.
   for (const string &coin : coins) {
-    auto client = make_unique<ExchangeClient>();
-    client->SetDEBUG(true);
-    client->SetOnMessage([](const string &msg) {
-      BinanceProcessor Processor;
-      json received = json::parse(msg);
-      json shortened = Processor.toSimpleKline(received);
-      for (auto &&client : Server.getClients()) {
-        client->send(shortened.dump(0));
-      }
-    });
-
+      auto client = make_unique<ExchangeClient>();
+      client->SetDEBUG(true);
+      client->SetOnMessage([](const string &msg) {
+        BinanceProcessor Processor;
+        json received = json::parse(msg);
+        json shortened = Processor.toSimpleKline(received);
+        for (auto &&client : Server.getClients()) {
+            client->send(shortened.dump(0));
+          }
+      });
     // Build the desired uri to connect to.
     string uri = "wss://stream.binance.us:9443/ws/" + coin + "@kline_1m";
-
     // Connect a client, and place it on the back of the vector.
     // emplace_back() moves it to the end of the vector without rebuilding it.
     clientThreadsVector.emplace_back(
         [client = client.get(), uri]() { client->Connect(uri); });
 
-    ExchangeClientPointersVector.push_back(move(client));
-  }
+        ExchangeClientPointersVector.push_back(move(client));
+    }
 
   // Build relative filepath to the frontend's index.html build artifact.
   // Presumes you ran this file from `build/` in the project's root directory.
@@ -172,18 +196,20 @@ int main() {
 
   // Abstracts webview details out of main.
   // In this way, we could launch multiple webviews if desired.
-  StartWebview(FrontendPath);
+    StartWebview(FrontendPath);
 
   /* Server.listenAndStart() is a blocking call.
-   * We need to explicitly call for the server's death.
+   * We need to explicitly call for the servers' death.
    * Then, join the threads and exit.
    */
-  Server.stop();
-  ServerThread.join();
+    Server.stop();
+    DatabaseServer.stop();
+    ServerThread.join();
+    DatabaseThread.join();
 
-  for (auto &client : clientThreadsVector) {
-    client.join();
-  }
+    for (auto &client : clientThreadsVector) {
+        client.join();
+    }
 
-  return 0;
+    return 0;
 }
