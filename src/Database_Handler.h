@@ -40,7 +40,7 @@ public:
     // Transactions:
     // Leverages ios append mode to write the incoming transactionto the end of the CSV database.
         {
-            ofstream file("../transactionHistory.csv", ios::app);
+            ofstream file("../userData/transactionHistory.csv", ios::app);
             if (file.is_open()) {
                 file << type << "," 
                      << coin << ","
@@ -55,7 +55,7 @@ public:
      */
         map<string, double> holdings;
         {
-            ifstream file("../holdings.csv");
+            ifstream file("../userData/holdings.csv");
             if (!file.is_open()) {
                 printf("Database_Handler: error reading holdings.csv\n"); // Excessive test logging
             } else {
@@ -82,7 +82,7 @@ public:
 
         // Rewrite holdings.csv
         {
-            ofstream file("../holdings.csv", ios::trunc);
+            ofstream file("../userData/holdings.csv", ios::trunc);
             if (!file.is_open()) {
                 printf("Database_Handler: error writing to holdings.csv\n"); // Excessive test logging
             } else {
@@ -101,7 +101,7 @@ public:
     inline void sendHoldingsData(ix::WebSocket& webSocket) {
         map<string, double> userHoldings;
         {
-            ifstream file("../holdings.csv");
+            ifstream file("../userData/holdings.csv");
             if (!file.is_open()) {
                 printf("Database_Handler: error reading holdings.csv\n"); // Excessive test logging
                 json empty;
@@ -147,7 +147,7 @@ public:
      * Final entry has last: true.
      */
     inline void sendTransactionHistory(ix::WebSocket& webSocket) {
-        ifstream file("../transactionHistory.csv");
+        ifstream file("../userData/transactionHistory.csv");
         if (!file.is_open()) {
             printf("Database_Handler: could not open transactionHistory.csv\n"); // Excessive test logging
             json empty;
@@ -219,7 +219,7 @@ public:
             return;
         }
 
-        ifstream file("../" + fileMap[coin]);
+        ifstream file("../userData/historical/" + fileMap[coin]);
         if (!file.is_open()) {
             printf("Database_Handler: could not open %s\n", fileMap[coin].c_str()); // Excessive test logging
             json empty;
