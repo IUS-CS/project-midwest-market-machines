@@ -18,7 +18,7 @@ function App() {
 /* (1) Initialization: Sets the starting coin and establishes the socket connection */
   const [currentCoin, setCurrentCoin] = useState('BTCUSDT');
   /* (4) Data Channel: WebSocket hook listens for changes to currentCoin and returns price */
-  const { price, latestCandle} = useCryptoSocket(currentCoin);
+  const { price, latestCandle, trade} = useCryptoSocket(currentCoin);
 
   return (
     <>
@@ -28,6 +28,10 @@ function App() {
         <h1>Simple Trade</h1>
         <p>Your one-stop shop for all things crypto!</p>
       </div>
+        <div>
+          <button onClick={() => trade('buy', 1.0)}>TEST BUY</button>
+          <button onClick={() => trade('sell', 1.0)}>TEST SELL</button>
+        </div>
       <div className="main_layout">
         {/* (2) User Input: Watchlist provides the interface for selecting a new coin */}
         {/* (3) State Update: onCoin triggers setCurrentCoin, restarting the cycle at step 1 */}
