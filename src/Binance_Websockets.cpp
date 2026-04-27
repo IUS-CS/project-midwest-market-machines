@@ -3,11 +3,13 @@
  * The Simple Trade App
  *
  * Hunter William Poole
- *
+ * Xavier Olsen
+ * 
  * Binance_Websockets.cpp
  *
- * This program spawns one WebSocket server to communicate with the front end,
- * and [x] WebSocket clients to communicate with Binance for [x] number of
+ * This program spawns two WebSocket servers to communicate with the front end:
+ * one for live market data, and one for user/historical data.
+ * It also spawns [x] WebSocket clients to communicate with Binance for [x] number of
  * coin. Default coins are used as a stand-in.
  *
  * Will subscribe to the Candestick Data Stream from Binance, and passes the
@@ -15,13 +17,17 @@
  */
 
 // Minimum necessary includes
+
 #include "BinanceProcessor.h"
+#include "Database_Handler.h"
 #include "ExchangeClient.h"
 #include "webview/webview.h"
 #include <filesystem>
 #include <ixwebsocket/IXWebSocketServer.h>
 #include <nlohmann/json.hpp>
 #include <thread>
+#include <string>
+#include <sstream>
 
 //  Quality of life statements. All are unneccessary, strictly speaking.
 using json = nlohmann::json;
@@ -33,7 +39,8 @@ using WebView = webview::webview;
 using namespace std;
 
 //-------------------Global Declarations--------------------
-WebSocketServer Server(8080, "127.0.0.1");
+WebSocketServer Server(8080, "127.0.0.1");         // Live market data
+WebSocketServer DatabaseServer(8081, "127.0.0.1"); // User/historical data
 //----------------------------------------------------------
 
 /* void StartServer()
@@ -56,8 +63,54 @@ void StartServer() {
       [](shared_ptr<ix::ConnectionState> connectionState, WebSocket &webSocket,
          const MessagePtr &msg) {});
 
-  // Blocking call - need to explicitly call Server.stop() later.
-  Server.listenAndStart();
+    // Blocking call - need to explicitly call Server.stop() later.
+    Server.listenAndStart();
+}
+
+/* void StartDatabaseServer()
+ *
+ * This function sets the server's behavior on message callback over port 8081, and
+ * starts the database's server.
+ *
+ * Callback from the frontend of MessageType::Open tells the Database_Handler that the frontend is ready,
+ * prompting the Database_Handler to send all holdings data through to the frontend.
+ * 
+ *Callback from the frontend of MessageType::Message writes valid transactions to the database.csv file 
+ * by contstruction a stringstream of the transaction data, and passing it to the Database_Handler's writeTransaction() method.
+ *  
+ * Valid transactions are JSON objects with fields: 
+ * "type" - e.g. "buy" or "sell", 
+ * "coin" - "BTC"
+ * "price" - "73583"
+ * "quantity" - "0.02156"
+ * 
+ * Important: StartServer() uses Server.listenAndStart(), which is a BLOCKING
+ * call. If you are to later try and join a server thread, you must first call
+ * Server.stop().
+ */
+void StartDatabaseServer() {
+    DatabaseServer.setOnClientMessageCallback(
+    [](shared_ptr<ix::ConnectionState> connectionState, WebSocket &webSocket, const MessagePtr &msg) {
+        Database_Handler db;
+        if (msg->type == MessageType::Open) {
+            db.sendHoldingsData(webSocket);
+            db.sendTransactionHistory(webSocket);
+            db.sendHistoricalData(webSocket, "btcusdt");
+            db.sendHistoricalData(webSocket, "ethusdt");
+            db.sendHistoricalData(webSocket, "adausdt");
+            db.sendHistoricalData(webSocket, "xrpusdt");
+            db.sendHistoricalData(webSocket, "dotusdt");
+            db.sendHistoricalData(webSocket, "uniusdt");
+        }
+        if (msg->type == MessageType::Message) {
+                json incoming = json::parse(msg->str);
+                string transactionType = incoming["type"].get<std::string>();
+                if (transactionType == "buy" || transactionType == "sell") {
+                    db.recordTransaction(&incoming);
+                }
+        }
+    });
+    DatabaseServer.listenAndStart();
 }
 
 /* void StartWebview()
@@ -80,11 +133,11 @@ void StartServer() {
  * 5. Then, run the window.
  */
 void StartWebview(filesystem::path FrontendPath) {
-  WebView Window(true, nullptr);
-  Window.set_title("Simple Trade");
-  Window.set_size(1200, 800, WEBVIEW_HINT_NONE);
-  Window.navigate("file://" + FrontendPath.generic_string());
-  Window.run();
+    WebView Window(true, nullptr);
+    Window.set_title("Simple Trade");
+    Window.set_size(1200, 800, WEBVIEW_HINT_NONE);
+    Window.navigate("file://" + FrontendPath.generic_string());
+    Window.run();
 }
 
 /* int main()
@@ -103,10 +156,11 @@ int main() {
   // Holds the names of coins.
   // Also known as the <ticker> or <symbol>.
   vector<string> coins = {"btcusdt", "ethusdt", "adausdt",
-                          "xrpusdt", "dotusdt", "uniusdt"};
+                            "xrpusdt", "dotusdt", "uniusdt"};
 
-  // Spawn the server in a thread.
+  // Spawn the servers in respective threads.
   thread ServerThread(StartServer);
+  thread DatabaseThread(StartDatabaseServer);
 
   // Keep-alive vectors. Save *outside of* the loop.
   vector<unique_ptr<ExchangeClient>> ExchangeClientPointersVector;
@@ -115,16 +169,16 @@ int main() {
   // For each coin make a unique client, setDEBUG, setCallback and put on
   // vector.
   for (const string &coin : coins) {
-    auto client = make_unique<ExchangeClient>();
-    client->SetDEBUG(true);
-    client->SetOnMessage([](const string &msg) {
-      BinanceProcessor Processor;
-      json received = json::parse(msg);
-      json shortened = Processor.toSimpleKline(received);
-      for (auto &&client : Server.getClients()) {
-        client->send(shortened.dump(0));
-      }
-    });
+      auto client = make_unique<ExchangeClient>();
+      client->SetDEBUG(true);
+      client->SetOnMessage([](const string &msg) {
+        BinanceProcessor Processor;
+        json received = json::parse(msg);
+        json shortened = Processor.toSimpleKline(received);
+        for (auto &&client : Server.getClients()) {
+            client->send(shortened.dump(0));
+          }
+      });
 
     // Build the desired uri to connect to.
     string uri = "wss://stream.binance.us:9443/ws/" + coin + "@kline_1m";
@@ -135,7 +189,7 @@ int main() {
         [client = client.get(), uri]() { client->Connect(uri); });
 
     ExchangeClientPointersVector.push_back(move(client));
-  }
+    }
 
   // Build relative filepath to the frontend's index.html build artifact.
   // Presumes you ran this file from `build/` in the project's root directory.
@@ -147,11 +201,13 @@ int main() {
   StartWebview(FrontendPath);
 
   /* Server.listenAndStart() is a blocking call.
-   * We need to explicitly call for the server's death.
+   * We need to explicitly call for the servers' death.
    * Then, join the threads and exit.
    */
   Server.stop();
+  DatabaseServer.stop();
   ServerThread.join();
+  DatabaseThread.join();
 
   for (auto &client : clientThreadsVector) {
     client.join();

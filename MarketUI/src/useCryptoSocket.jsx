@@ -1,20 +1,23 @@
 import { useState, useEffect, useRef } from 'react';
-
 /* 
 Backend websocket connection.
 */
 const useCryptoSocket = (selectedCoin) => {
   const [price, setPrice] = useState(null);
   const [latestCandle, setLatestCandle] = useState(null);
-  const [lastJsonMessage, setLastJsonMessage] = useState(null);
-  const [holdings, setHoldings] = useState([]);
 
   const SOCKET_URL = "ws://127.0.0.1:8080";
+  const DB_URL = "ws://127.0.0.1:8081";
 
   const candleMapRef = useRef(new Map());
   const lastCloseRef = useRef(null);
   const prevCoinRef = useRef(null);
 
+  const [holdings, setHoldings] = useState([]);
+  const [transactions, setTransactions] = useState([]);
+  const [historicalData, setHistoricalData] = useState({});
+  const dbSocketRef = useRef(null);
+  const [lastJsonMessage, setLastJsonMessage] = useState(null);
   /* useEffect() for WebSocket socket.
    *
    * 1. Define WebSocket socket with SOCKET_URL.
@@ -36,44 +39,40 @@ const useCryptoSocket = (selectedCoin) => {
   useEffect(() => {
     const socket = new WebSocket(SOCKET_URL);
 
-    // Will receive `last: <bool : is last?> on last holdings JSON`
-    let isStartup = true;
-
     socket.onmessage = (event) => {
       const jsonReceived = JSON.parse(event.data);
+      setLastJsonMessage(jsonReceived);
+    }
+    return () => socket.close();
+  }, []);
 
-      /* For startup, we expect this:
-       *
-       * {
-       *    coin: <coin>,
-       *    quantity: <quantity>,
-       *    time: <UNIX time>,
-       *    price: <price>,
-       *    last: <bool : is last?>
-       * }
-       */
-      if (isStartup) {
-        setHoldings((prev) => [...prev, {
-          coin: jsonReceived.coin,
-          quantity: jsonReceived.quantity,
-          time: jsonReceived.time,
-          price: jsonReceived.price
-        }]);
-
-        if (jsonReceived.last === true) {
-          isStartup = false;
-          console.log("Got last holding.");
+  useEffect(() => {
+    const socket = new WebSocket(DB_URL);
+    dbSocketRef.current = socket;
+    socket.onmessage = (event) => {
+      const data = JSON.parse(event.data);
+      if (data.dataType === "holding") {
+        setHoldings((prev) => [...prev, data]);
+        return;
+      }
+      if (data.dataType === "transaction") {
+        setTransactions((prev) => [...prev, data]);
+        return;
+      }
+      if (data.dataType === "historical") {
+        if (!data.last) {
+          setHistoricalData((prev) => ({
+            ...prev,
+            [data.coin]: [...(prev[data.coin] ?? []), { time: data.time, price: data.price }]
+          }));
         }
         return;
       }
-
-      if (data.Kline) {
-        setLastJsonMessage(jsonReceived);
-      }
     };
-
     return () => socket.close();
   }, []);
+
+
 
   useEffect(() => {
     if (prevCoinRef.current !== selectedCoin) {
@@ -117,7 +116,27 @@ const useCryptoSocket = (selectedCoin) => {
 
   }, [lastJsonMessage, selectedCoin]);
 
-  return { price, latestCandle, holdings };
-};
+  const trade = (type, quantity) => {
+    if (dbSocketRef.current?.readyState === WebSocket.OPEN) {
+      if (price === null) {
+        console.warn("No price yet, trade blocked.");
+        return;
+      }
+      if (!quantity || quantity <= 0) {
+        console.warn("Invalid quantity, trade blocked.");
+        return;
+      }
+      const tradeData = {
+        type: type,
+        coin: selectedCoin,
+        price: price,
+        quantity: quantity
+      };
+      console.log("Sending to backend:", tradeData);
+      dbSocketRef.current.send(JSON.stringify(tradeData));
+    }
+  };
 
+  return { price, latestCandle, holdings, transactions, historicalData, trade };
+};
 export default useCryptoSocket;

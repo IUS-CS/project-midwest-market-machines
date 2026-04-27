@@ -41,7 +41,7 @@ PowerShell
 
 ```PowerShell
 # Set current dir as source, ./build/ as build dir, and MiniGW Makefiles as the makefiles generator.
-cmake -S . -B build/ -G "MiniGW Makefiles"
+cmake -S . -B build/ -G "MinGW Makefiles"
 cd build/
 nmake
 ./Binance_Websockets.exe
