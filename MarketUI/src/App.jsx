@@ -21,7 +21,7 @@ function App() {
   /* (1) Initialization: Sets the starting coin and establishes the socket connection */
   const [currentCoin, setCurrentCoin] = useState('BTCUSDT');
   /* (4) Data Channel: WebSocket hook listens for changes to currentCoin and returns price */
-  const { price, latestCandle, holdings, trade } = useCryptoSocket(currentCoin);
+  const { price, latestCandle, holdings, trade, historicalCandles } = useCryptoSocket(currentCoin);
 
   return (
     <>
@@ -43,7 +43,7 @@ function App() {
           {/* (5a) Rendered Output: ShowPrice receives the final price and renders it to the screen */}
           <ShowPrice price={price} coin={currentCoin} />
           {/* (5b Rendered Output: CandlestickChart receives the data necessary to create and update the candles)*/}
-          <CandlestickChart coin={currentCoin} latestCandle={latestCandle} />
+          <CandlestickChart coin={currentCoin} latestCandle={latestCandle} historicalCandles={historicalCandles} />
         </div>
       </div>
       <div className="container mx-auto py-10">

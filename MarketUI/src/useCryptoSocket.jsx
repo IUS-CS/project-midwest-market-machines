@@ -18,6 +18,10 @@ const useCryptoSocket = (selectedCoin) => {
   const [historicalData, setHistoricalData] = useState({});
   const dbSocketRef = useRef(null);
   const [lastJsonMessage, setLastJsonMessage] = useState(null);
+
+  const [combinedHistory, setCombinedHistory] = useState([]);
+  const historicalBuffer = useRef({});
+  const allCoinsBuffer = useRef({});
   /* useEffect() for WebSocket socket.
    *
    * 1. Define WebSocket socket with SOCKET_URL.
@@ -51,19 +55,34 @@ const useCryptoSocket = (selectedCoin) => {
     dbSocketRef.current = socket;
     socket.onmessage = (event) => {
       const data = JSON.parse(event.data);
+
       if (data.dataType === "holding") {
         setHoldings((prev) => [...prev, data]);
         return;
       }
+
       if (data.dataType === "transaction") {
         setTransactions((prev) => [...prev, data]);
         return;
       }
+
       if (data.dataType === "historical") {
-        if (!data.last) {
+        const coinupper = data.coin.toUpperCase();
+
+        if (!historicalBuffer.current[coinupper]) historicalBuffer.current[coinupper] = [];
+
+        historicalBuffer.current[coinupper].push({
+          time: data.time,
+          open: data.price,
+          high: data.price,
+          low: data.price,
+          close: data.price
+        });
+
+        if (data.last) {
           setHistoricalData((prev) => ({
             ...prev,
-            [data.coin]: [...(prev[data.coin] ?? []), { time: data.time, price: data.price }]
+            [coinupper]: [...historicalBuffer.current[coinupper]]
           }));
         }
         return;
@@ -85,34 +104,33 @@ const useCryptoSocket = (selectedCoin) => {
   }, [selectedCoin])
 
   useEffect(() => {
-    if (!lastJsonMessage || lastJsonMessage.Coin !== selectedCoin || !lastJsonMessage.Kline) { return; }
+    if (!lastJsonMessage || !lastJsonMessage.Kline) { return; }
 
+    const coin = lastJsonMessage.Coin;
     const k = lastJsonMessage.Kline;
-    const open = parseFloat(k.Open);
-    const high = parseFloat(k.High);
-    const low = parseFloat(k.Low);
-    const close = parseFloat(k.Close);
-
     const timeSeconds = Math.floor(k.StartTime / 1000);
-    const existingCandle = candleMapRef.current.get(timeSeconds)
-    const realOpen = existingCandle ? existingCandle.open : (lastCloseRef.current ?? open);
+
+    if (!allCoinsBuffer.current[coin]) {
+      allCoinsBuffer.current[coin] = new Map();
+    }
+
+    const coinMap = allCoinsBuffer.current[coin];
+    const existing = coinMap.get(timeSeconds);
 
     const candle = {
       time: timeSeconds,
-      open: realOpen,
-      high: Math.max(high, realOpen, close),
-      low: Math.min(low, realOpen, close),
-      close: close,
+      open: existing ? existing.open : parseFloat(k.Open),
+      high: Math.max(parseFloat(k.High), existing ? existing.high : 0),
+      low: Math.min(parseFloat(k.Low), existing ? existing.low : Infinity),
+      close: parseFloat(k.Close),
     };
 
-    candleMapRef.current.set(timeSeconds, candle);
+    coinMap.set(timeSeconds, candle);
 
-    if (k.KlineFinished) { lastCloseRef.current = close; }
-
-    const sorted = Array.from(candleMapRef.current.values()).sort((a, b) => a.time - b.time)
-
-    setPrice(close);
-    setLatestCandle(candle);
+    if (coin === selectedCoin) {
+      setPrice(candle.close);
+      setLatestCandle(candle);
+    }
 
   }, [lastJsonMessage, selectedCoin]);
 
@@ -137,6 +155,23 @@ const useCryptoSocket = (selectedCoin) => {
     }
   };
 
-  return { price, latestCandle, holdings, transactions, historicalData, trade };
+  useEffect(() => {
+    const csvData = historicalData[selectedCoin] || [];
+    const liveBuffer = allCoinsBuffer.current[selectedCoin];
+
+    const liveData = liveBuffer
+      ? Array.from(liveBuffer.values()).sort((a, b) => a.time - b.time) : [];
+
+    const combined = [...csvData, ...liveData];
+    setCombinedHistory(combined);
+
+    if (combined.length > 0) {
+      setPrice(combined[combined.length - 1].close);
+    } else {
+      setPrice("Loading...");
+    }
+  }, [selectedCoin, historicalData]);
+
+  return { price, latestCandle, holdings, transactions, historicalCandles: combinedHistory, trade };
 };
 export default useCryptoSocket;
