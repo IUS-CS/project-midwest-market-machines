@@ -1,4 +1,4 @@
-/* coulmns.jsx
+/* columns.jsx
  *
  * This file defines the columns to be used in PurchasesTable.
 */
