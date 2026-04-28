@@ -5,6 +5,9 @@ import Watchlist from './components/Watchlist'
 import useCryptoSocket from './useCryptoSocket'
 import ShowPrice from './components/ShowPrice'
 import CandlestickChart from './components/CandlestickChart'
+import { columns } from './components/purchases/columns'
+import PurchasesTable from './components/purchases/PurchasesTable'
+import ChatBox from './components/ChatBox'
 import About from './components/About'
 import Contact from './components/Contact'
 /*
@@ -20,7 +23,7 @@ function App() {
   /* (1) Initialization: Sets the starting coin and establishes the socket connection */
   const [currentCoin, setCurrentCoin] = useState('BTCUSDT');
   /* (4) Data Channel: WebSocket hook listens for changes to currentCoin and returns price */
-  const { price, latestCandle} = useCryptoSocket(currentCoin);
+  const { price, latestCandle, holdings, trade, historicalCandles } = useCryptoSocket(currentCoin);
   /*     Page Navigation: Tracks which page should currently be displayed */
   const [page, setPage] = useState('home');
 
@@ -34,6 +37,10 @@ function App() {
         <h1>Simple Trade</h1>
         <p>Your one-stop shop for all things crypto!</p>
       </div>
+      <div>
+        <button style={{ cursor: 'pointer' }} onClick={() => trade('buy', 1.0)}>BUY </button>
+        <button style={{ cursor: 'pointer' }} onClick={() => trade('sell', 1.0)}> SELL</button>
+      </div>
       <div className="main_layout">
         {/* (2) User Input: Watchlist provides the interface for selecting a new coin */}
         {/* (3) State Update: onCoin triggers setCurrentCoin, restarting the cycle at step 1 */}
@@ -42,9 +49,14 @@ function App() {
           {/* (5a) Rendered Output: ShowPrice receives the final price and renders it to the screen */}
           <ShowPrice price={price} coin={currentCoin} />
           {/* (5b Rendered Output: CandlestickChart receives the data necessary to create and update the candles)*/}
-          <CandlestickChart coin={currentCoin} latestCandle={latestCandle} />
+          <CandlestickChart coin={currentCoin} latestCandle={latestCandle} historicalCandles={historicalCandles} />
         </div>
       </div>
+      <div className="container mx-auto py-10">
+        <PurchasesTable columns={columns} data={holdings} />
+      </div>
+      {/* AI Trading Assistant ChatBox */}
+      <ChatBox />
     </>
     )}
 
