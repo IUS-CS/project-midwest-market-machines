@@ -32,8 +32,8 @@ function App() {
         <p>Your one-stop shop for all things crypto!</p>
       </div>
       <div>
-        <button onClick={() => trade('buy', 1.0)}>TEST BUY</button>
-        <button onClick={() => trade('sell', 1.0)}>TEST SELL</button>
+        <button style={{ cursor: 'pointer' }} onClick={() => trade('buy', 1.0)}>BUY </button>
+        <button style={{ cursor: 'pointer' }} onClick={() => trade('sell', 1.0)}> SELL</button>
       </div>
       <div className="main_layout">
         {/* (2) User Input: Watchlist provides the interface for selecting a new coin */}
