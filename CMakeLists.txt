@@ -17,7 +17,7 @@ endif()
 if(WIN32)
   add_compile_definitions(_HAS_STD_BYTE=0)
   link_libraries(bcrypt ws2_32 crypt32)
-  set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
+  set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "$<1:${CMAKE_BINARY_DIR}>")
   set(X_VCPKG_APPLOCAL_DEPS ON)
 
   # Auto vcpkg setup: clones, bootstraps, needs to load before project() call

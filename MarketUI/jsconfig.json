@@ -1,0 +1,13 @@
+/* This file is required for shadcn/ui. Specifically the CLI.
+*  We create an alias for '@/'.
+*/
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@/*": [
+        "./src/*"
+      ]
+    }
+  }
+}
