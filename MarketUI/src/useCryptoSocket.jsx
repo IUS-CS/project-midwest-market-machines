@@ -150,6 +150,12 @@ const useCryptoSocket = (selectedCoin) => {
         price: price,
         quantity: quantity
       };
+
+      if (type === 'buy') {
+        setHoldings((prev) => [...prev, tradeData]);
+      } else if (type === 'sell') {
+        setHoldings(prevHoldings => prevHoldings.slice(0, -1));
+      }
       console.log("Sending to backend:", tradeData);
       dbSocketRef.current.send(JSON.stringify(tradeData));
     }
