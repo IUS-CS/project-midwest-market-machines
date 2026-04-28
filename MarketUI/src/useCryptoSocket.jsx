@@ -106,7 +106,8 @@ const useCryptoSocket = (selectedCoin) => {
   useEffect(() => {
     if (!lastJsonMessage || !lastJsonMessage.Kline) { return; }
 
-    const coin = lastJsonMessage.Coin;
+    const coin = lastJsonMessage.Coin.toUpperCase();
+    const activeCoin = selectedCoin.toUpperCase();
     const k = lastJsonMessage.Kline;
     const timeSeconds = Math.floor(k.StartTime / 1000);
 
@@ -127,9 +128,9 @@ const useCryptoSocket = (selectedCoin) => {
 
     coinMap.set(timeSeconds, candle);
 
-    if (coin === selectedCoin) {
+    if (coin === activeCoin) {
       setPrice(candle.close);
-      setLatestCandle(candle);
+      setLatestCandle({ ...candle });
     }
 
   }, [lastJsonMessage, selectedCoin]);
@@ -162,8 +163,9 @@ const useCryptoSocket = (selectedCoin) => {
   };
 
   useEffect(() => {
-    const csvData = historicalData[selectedCoin] || [];
-    const liveBuffer = allCoinsBuffer.current[selectedCoin];
+    const activeCoin = selectedCoin.toUpperCase();
+    const csvData = historicalData[activeCoin] || [];
+    const liveBuffer = allCoinsBuffer.current[activeCoin];
 
     const liveData = liveBuffer
       ? Array.from(liveBuffer.values()).sort((a, b) => a.time - b.time) : [];
@@ -172,7 +174,8 @@ const useCryptoSocket = (selectedCoin) => {
     setCombinedHistory(combined);
 
     if (combined.length > 0) {
-      setPrice(combined[combined.length - 1].close);
+      const lastPrice = combined[combined.length - 1].close;
+      setPrice(prev => (typeof prev === 'number' ? prev : lastPrice));
     } else {
       setPrice("Loading...");
     }
