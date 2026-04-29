@@ -22,6 +22,12 @@ const useCryptoSocket = (selectedCoin) => {
   const [combinedHistory, setCombinedHistory] = useState([]);
   const historicalBuffer = useRef({});
   const allCoinsBuffer = useRef({});
+
+  /* allCoinsSnapshot - coin ref snapshot price updated on every kline tick,
+   * Shape: { BTCUSDT: 72222.22, ETHUSDT: 2222.2, ... }
+   * Passed to ChatBox so qwen can see all coin prices during auto scan. */
+  const [allCoinsSnapshot, setAllCoinsSnapshot] = useState({});
+
   /* useEffect() for WebSocket socket.
    *
    * 1. Define WebSocket socket with SOCKET_URL.
@@ -91,8 +97,6 @@ const useCryptoSocket = (selectedCoin) => {
     return () => socket.close();
   }, []);
 
-
-
   useEffect(() => {
     if (prevCoinRef.current !== selectedCoin) {
       candleMapRef.current = new Map();
@@ -133,11 +137,25 @@ const useCryptoSocket = (selectedCoin) => {
       setLatestCandle({ ...candle });
     }
 
+    /* Updates LLM with the latest close price for this coin,
+     * Every kline tick from any coin triggers this, keeping the map current. */
+    setAllCoinsSnapshot((prev) => ({
+      ...prev,
+      [coin]: candle.close,
+    }));
+
   }, [lastJsonMessage, selectedCoin]);
 
-  const trade = (type, quantity) => {
+  /* trade()
+   *
+   * Accepts an optional coin argument so the Qwen can execute trades on any
+   * coin, not just the one selected in the Watchlist. Falls back to
+   * selectedCoin when no coin is passed (preserving original behavior).
+   * Looks up the correct price from allCoinsSnapshot for the target coin. */
+  const trade = (type, quantity, coin = selectedCoin) => {
     if (dbSocketRef.current?.readyState === WebSocket.OPEN) {
-      if (price === null) {
+      const tradePrice = allCoinsSnapshot[coin.toUpperCase()] ?? price;
+      if (tradePrice === null) {
         console.warn("No price yet, trade blocked.");
         return;
       }
@@ -147,8 +165,8 @@ const useCryptoSocket = (selectedCoin) => {
       }
       const tradeData = {
         type: type,
-        coin: selectedCoin,
-        price: price,
+        coin: coin,
+        price: tradePrice,
         quantity: quantity
       };
 
@@ -181,6 +199,6 @@ const useCryptoSocket = (selectedCoin) => {
     }
   }, [selectedCoin, historicalData]);
 
-  return { price, latestCandle, holdings, transactions, historicalCandles: combinedHistory, trade };
+  return { price, latestCandle, holdings, transactions, historicalCandles: combinedHistory, trade, allCoinsSnapshot };
 };
 export default useCryptoSocket;
