@@ -78,7 +78,7 @@ const CandlestickChart = ({ coin, latestCandle, historicalCandles }) => {
   /* Updates the chart with the data for the currently selected coin.
    * We update incrementally, unless the coin name changes or the histroical data
    * has JUST arrived.
-   *
+   * 
    * 1. If we get an update that is *not* for the current coin, return.
    * 2. Get a bool 'coinChanged' that tracks whether the coin changed or not.
    * 2. If the coin changes...
