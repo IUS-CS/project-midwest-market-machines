@@ -18,7 +18,7 @@ Check for CMake version with `cmake --version`.
 
 1. Navigate to the `MarketUI` directory for the project.
 2. If on Windows - ensure your ExecutionPolicy is set to allow scripts to be run from the terminal. You may use `Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass` to accomplish this.
-3. Run the following commands:
+3. Run the following commands on PowerShell if you're on Windows, or Bash if you're on Linux:
 
 PowerShell
 
@@ -40,10 +40,10 @@ Then, in the project's root directory, run the following commands:
 PowerShell
 
 ```PowerShell
-# Set current dir as source, ./build/ as build dir, and MiniGW Makefiles as the makefiles generator.
-cmake -S . -B build/ -G "MinGW Makefiles"
-cd build/
-nmake
+# Set current dir as source, build dir to ./build/, and compile/run the app
+cmake -S . -B build/
+cmake --build build/
+cd build
 ./Binance_Websockets.exe
 ```
 
@@ -55,9 +55,6 @@ cd build/
 make                                          # Make Binance_Websockets.cpp and other files.
 ./Binance_Websockets.exe                      # Run the application.
 ```
-
-> [!TIP]
-> You may get an error after running `npm install --legacy-peer-deps`, but it can be safely ignored.
 
 ## Testing
 

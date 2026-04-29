@@ -1,8 +1,12 @@
-import { expect, test, describe, it } from 'vitest'
-import { render, screen } from '@testing-library/react';
+import { expect, test } from 'vitest';
 import ShowPrice from './ShowPrice.jsx';
-
-describe('ShowPrice Component', () => {
-  it.todo('should display the correct price and coin name from props');
-  it.todo('should determine if ShowPrice updates on a new price');
+/*
+* Simple function to ensure logic of display component works, 
+* no if/else logic means testing is trivial, linear cyclomatic or something I don't remember
+*/ 
+test('ShowPrice coverage at 100%', () => {
+  const props = { coin: 'BTCUSDT', price: '76480.36' };
+  const result = ShowPrice(props);
+  expect(JSON.stringify(result)).toContain('BTCUSDT');
+  expect(JSON.stringify(result)).toContain('76480.36');
 });

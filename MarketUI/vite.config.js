@@ -59,5 +59,32 @@ export default defineConfig({
     minify: false,
     sourcemap: true,
   },
+/* This block provides separation of concerns for testing through vitest with v8, 
+ * and replacing RTL e.g. import {renderHook} from '@testing-library/react'; with Playwright experimental components.
+ * 
+ * Node allows for fast logic based vitests, without the need for rendering with jsdom.
+ * jsdom is annoying, Playwright does pretty much the same thing but better, especially if you're not familiar
+ * as you can use the component identifier rather than API doc crawling.
+ * - include: [ line makes sure that vitest only looks for .test files,
+ * - exclude: [ ensures it ignores the Playwright E2E folder, as well as component files. (.spec)
+ * 
+ * - coverage: { generates HTML report for vitest coverage.
+ */
+
+  test: {
+    globals: false, // collision with playwright
+    environment: 'node',
+    include: ['src/**/*.test.{js,jsx}'], 
+    exclude: [
+      '**/node_modules/**',
+      '**/dist/**',
+      'tests/**',
+      'src/**/*.spec.{js,jsx}' 
+    ],
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'html'], 
+    },
+  },
   dedupe: ['react', 'react-dom']
 })
