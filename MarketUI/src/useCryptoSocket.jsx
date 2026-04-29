@@ -34,9 +34,18 @@ const useCryptoSocket = (selectedCoin) => {
    */
   useEffect(() => {
     activeCoinRef.current = selectedCoin;
-    setPrice(null);
+
+    const coin = selectedCoin.toUpperCase();
+    const history = historicalData[coin] || [];
+
+    if (history.length > 0) {
+      setPrice(history[history.length - 1].close);
+    } else {
+      setPrice(null);
+    }
+
     setLatestCandle(null);
-  }, [selectedCoin]);
+  }, [selectedCoin, historicalData]);
 
   /* Receives live kline data from the backend, parses it, and updates
    * the relevant refs.
