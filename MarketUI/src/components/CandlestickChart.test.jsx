@@ -1,6 +1,4 @@
-import { expect, test, describe, it } from 'vitest'
-import { render } from '@testing-library/react';
-import CandlestickChart from './CandlestickChart.jsx';
+import { expect, test, describe, it } from 'vitest';
 
 describe('CandlestickChart Component', () => {
   it.todo('should initialize the lightweight-charts container on mount');
