@@ -67,7 +67,7 @@ const useCryptoSocket = (selectedCoin) => {
 
   /* Receives live kline data from the backend, parses it, and updates
    * the relevant refs.
-   *
+   * 
    * 1. Declare a new socket.
    * 2. Determine onmessage behavior as follows:
    *    2a. Parse the event data into a JSON.
