@@ -40,9 +40,12 @@ _deps
 build/*
 .cache
 
-# UserData 
+# User data
+userData/transactionHistory.csv
+userData/holdings.csv
 /userData/transactionHistory.csv
 /userData/holdings.csv
+
 ### CMake ###
 CMakeLists.txt.user
 CMakeCache.txt
