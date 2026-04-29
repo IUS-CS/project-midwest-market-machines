@@ -19,7 +19,15 @@ using namespace std;
  * to allow for differentiation on the frontend
  */
 class Database_Handler {
+private:
+  string path;
+
 public:
+  // Default constructor.
+  Database_Handler() { path = "../userData/"; }
+
+  // Overloaded constructor to set a custom path.
+  Database_Handler(const string &Path) { path = Path; }
   /* inline void recordTransaction()
    * On receiving a transaction from the frontend, this function writes to
    * transactionHistory.csv, then updates holdings.csv by applying the target
@@ -42,7 +50,7 @@ public:
     // Leverages ios append mode to write the incoming transactionto the end of
     // the CSV database.
     {
-      ofstream file("../userData/transactionHistory.csv", ios::app);
+      ofstream file(path + "transactionHistory.csv", ios::app);
       if (file.is_open()) {
         file << type << "," << coin << "," << toStr((*transactionData)["price"])
              << "," << quantity << "," << time(0) << endl;
@@ -57,7 +65,7 @@ public:
      */
     map<string, double> holdings;
     {
-      ifstream file("../userData/holdings.csv");
+      ifstream file(path + "holdings.csv");
       if (!file.is_open()) {
         printf(
             "Database_Handler: error reading holdings.csv\n"); // Excessive test
@@ -89,7 +97,7 @@ public:
 
     // Rewrite holdings.csv
     {
-      ofstream file("../userData/holdings.csv", ios::trunc);
+      ofstream file(path + "holdings.csv", ios::trunc);
       if (!file.is_open()) {
         printf(
             "Database_Handler: error writing to holdings.csv\n"); // Excessive
@@ -111,7 +119,7 @@ public:
   inline void sendHoldingsData(ix::WebSocket &webSocket) {
     map<string, double> userHoldings;
     {
-      ifstream file("../userData/holdings.csv");
+      ifstream file(path + "holdings.csv");
       if (!file.is_open()) {
         printf(
             "Database_Handler: error reading holdings.csv\n"); // Excessive test
@@ -160,7 +168,7 @@ public:
    * Final entry has last: true.
    */
   inline void sendTransactionHistory(ix::WebSocket &webSocket) {
-    ifstream file("../userData/transactionHistory.csv");
+    ifstream file(path + "transactionHistory.csv");
     if (!file.is_open()) {
       printf(
           "Database_Handler: could not open transactionHistory.csv\n"); // Excessive
@@ -235,7 +243,7 @@ public:
       return;
     }
 
-    ifstream file("../userData/historical/" + fileMap[coin]);
+    ifstream file(path + "historical/" + fileMap[coin]);
     if (!file.is_open()) {
       printf("Database_Handler: could not open %s\n",
              fileMap[coin].c_str()); // Excessive test logging
