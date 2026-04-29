@@ -8,7 +8,7 @@ import "../css/ChatBox.css";
  *    1. Manual chat - the user types a message and the model responds
  *       with awareness of the current coin, price, holdings, and
  *       transaction history passed in via marketContext.
- *    2. Auto-scan - a 30-second interval fires automatically, passing
+ *    2. Auto-scan - a 30 second interval fires automatically, passing
  *       all live coin prices to the model and asking it to pick one
  *       to buy. The result is executed via onTrade() and logged in chat.
  *
