@@ -11,6 +11,18 @@
 using json = nlohmann::json;
 using namespace std;
 
+//------------------- JSON Types -----------------
+
+/* struct EmptyJSON
+ *
+ * For historical data, the frontend expects to receive a JSON object with flag
+ * last = true on the last item.
+ */
+struct EmptyJSON {
+  string dataType = "holding";
+  bool last = true;
+};
+
 /* class Database_Handler
  * Receives frontend transaction information through Binance_Websockets.cpp,
  * Writes transactions to transactionHistory.csv and updates holdings.csv,
