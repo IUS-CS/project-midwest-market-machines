@@ -116,6 +116,10 @@ public:
         printf(
             "Database_Handler: error reading holdings.csv\n"); // Excessive test
                                                                // logging
+        ofstream Holdings("../userData/holdings.csv");
+        Holdings.close();
+        printf("Created holdings.csv\n");
+
         json empty;
         empty["dataType"] = "holding";
         empty["last"] = true;
@@ -166,6 +170,13 @@ public:
           "Database_Handler: could not open transactionHistory.csv\n"); // Excessive
                                                                         // test
                                                                         // logging
+
+      // If we can't find transactionHistory.csv, then we create it.
+      ofstream Transactions("../userData/transactionHistory.csv");
+      Transactions.close();
+      printf("Created transactionHistory.csv\n");
+
+      // File now exists, but is empty.
       json empty;
       empty["dataType"] = "transaction";
       empty["last"] = true;
