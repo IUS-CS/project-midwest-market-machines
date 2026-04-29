@@ -9,10 +9,13 @@
 
 #include "Database_Handler.h"
 #include "ixwebsocket/IXConnectionState.h"
+#include "ixwebsocket/IXWebSocket.h"
 #include "ixwebsocket/IXWebSocketMessage.h"
+#include "ixwebsocket/IXWebSocketMessageType.h"
 #include "ixwebsocket/IXWebSocketServer.h"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include <filesystem>
 #include <future>
 #include <gmock/gmock.h>
 
@@ -55,7 +58,9 @@ protected:
         [](shared_ptr<ix::ConnectionState> connectionState,
            ix::WebSocket &webSocket,
            const ix::WebSocketMessagePtr &msg) -> void {
-          if (NULL) {
+          Database_Handler db;
+
+          if (msg->type == ix::WebSocketMessageType::Open) {
           }
         });
 
@@ -82,3 +87,50 @@ protected:
     Server.reset();
   }
 };
+
+/* class MockDatabaseHooks
+ *
+ * This mocking class describes the four currently used mock methods from
+ * Database_Handler.
+ */
+class MockDatabaseHooks {
+public:
+  MOCK_METHOD(void, recordTransaction, (json * transactionData), ());
+  MOCK_METHOD(void, sendHoldingsData, (ix::WebSocket & webSocket), ());
+  MOCK_METHOD(void, sendTransactionHistory, (ix::WebSocket & webSocket), ());
+  MOCK_METHOD(void, sendHistoricalData,
+              (ix::WebSocket & webSocket, const string &coin), ());
+};
+
+//----------------------- GLOBALS ------------------------------------------
+int port = 9999;
+string host = "127.0.0.1";
+
+/*
+ */
+TEST(Database_Handler, Record_A_Transaction) {
+  Database_Handler Database("./testData/");
+  MockDatabaseHooks Hooks;
+  json Transaction, Found;
+
+  Transaction["type"] = "buy";
+  Transaction["coin"] = "BTCUSDT";
+  Transaction["quantity"] = 1.00;
+
+  EXPECT_CALL(Hooks, recordTransaction(&Transaction));
+
+  Database.recordTransaction(&Transaction);
+
+  ifstream file("./testData/transactionHistory.csv");
+  if (file.is_open()) {
+    string line;
+    getline(file, line);
+
+    Found = Found.parse(line);
+  } else {
+    // Fail on purpose.
+    ASSERT_TRUE(true == false);
+  }
+
+  ASSERT_EQ(Transaction.dump(), Found.dump());
+}
