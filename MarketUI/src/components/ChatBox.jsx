@@ -163,8 +163,12 @@ const ChatBox = ({ marketContext = {}, onTrade }) => {
 
         const action = ["buy", "sell"].includes(parsed.action) ? parsed.action : null;
         const quantity = Number(parsed.quantity) || 1;
-        const coin = COINS.includes(parsed.coin) ? parsed.coin : null;
-        const message = parsed.message || "Market scan complete.";
+        const coin = COINS.includes(parsed.coin?.trim().toUpperCase())
+          ? parsed.coin.trim().toUpperCase()
+          : null;
+        const message = parsed.message && parsed.message.length < 120
+          ? parsed.message
+          : "Market scan complete.";
 
         if (action !== null && coin !== null && onTrade) {
             onTrade(action, quantity, coin);
@@ -274,7 +278,9 @@ const ChatBox = ({ marketContext = {}, onTrade }) => {
       console.error("Error getting LLM response:", error);
       setMessages(prev => [...prev, {
         sender: "bot",
-        text: "Sorry, I encountered an error. Please try again.",
+        text: error.message.includes("Ollama Offline")
+          ? "Connection Error: Ensure Ollama is running locally."
+          : "Sorry, I encountered an error. Please try again.",
       }]);
     } finally {
       setIsTyping(false);
