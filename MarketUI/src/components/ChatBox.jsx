@@ -202,7 +202,8 @@ const ChatBox = ({ marketContext = {}, onTrade }) => {
    * Safeguards against malformed JSONs because Qwen can be really stupid and I don't 
    * trust it
    * 
-   * Fall back json flag returns the raw text as the message instead.
+   * A non-200 response or malformed JSON will throw and be caught by
+   * handleSend's try/catch, which surfaces it as a chat message.
    */
   const getLLMResponse = async (userMessage) => {
     const contextBlock = buildContextString(marketContext);
@@ -223,8 +224,6 @@ const ChatBox = ({ marketContext = {}, onTrade }) => {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
     });
-
-    if (!response.ok) throw new Error(`Ollama Offline (Status ${response.status})`);
 
     const data = await response.json();
     const rawText = data.message?.content ?? "{}";
@@ -249,6 +248,8 @@ const ChatBox = ({ marketContext = {}, onTrade }) => {
    * If the model returns a valid trade action with a positive quantity,
    * it calls onTrade() with the action, quantity, and coin, then logs
    * an [EXECUTED] confirmation. Otherwise just appends the reply text.
+   * Catches any errors from getLLMResponse and surfaces them as a chat
+   * message so the frontend does not crash.
    */
   const handleSend = async () => {
     if (input.trim() === "") return;
@@ -278,9 +279,7 @@ const ChatBox = ({ marketContext = {}, onTrade }) => {
       console.error("Error getting LLM response:", error);
       setMessages(prev => [...prev, {
         sender: "bot",
-        text: error.message.includes("Ollama Offline")
-          ? "Connection Error: Ensure Ollama is running locally."
-          : "Sorry, I encountered an error. Please try again.",
+        text: "Sorry, I encountered an error. Please try again.",
       }]);
     } finally {
       setIsTyping(false);
