@@ -18,6 +18,7 @@
 
 #pragma once
 
+#include <cstdint>
 #include <nlohmann/json.hpp>
 #include <string>
 
@@ -38,6 +39,7 @@ using namespace std;
  * Likely to be more useful later than they are now.
  */
 struct KlineData {
+  uint64_t StartTime;
   string Open;
   string Close;
   string High;
@@ -56,7 +58,8 @@ struct OutboundJSONStruct {
  *
  *  Should be <type_you_want>, <member_1>, <member_2>, ..., <member_n>
  */
-NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(KlineData, Open, Close, High, Low);
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(KlineData, Open, StartTime, Close, High,
+                                   Low);
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(OutboundJSONStruct, EventTime, Coin, Kline);
 
 /* class BinanceProcessor exists to define the methods needed to parse Binance's
@@ -77,6 +80,7 @@ public:
     OutboundJSONStruct outbound;
     outbound.EventTime = received["E"];
     outbound.Coin = received["s"];
+    outbound.Kline.StartTime = received["k"]["t"];
     outbound.Kline.Open = received["k"]["o"];
     outbound.Kline.Close = received["k"]["c"];
     outbound.Kline.High = received["k"]["h"];
