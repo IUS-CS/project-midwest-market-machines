@@ -33,25 +33,36 @@ const useCryptoSocket = (selectedCoin) => {
    * 1. Set activeCoinRef.current to selectedCoin.
    * 2. Normalize selectedCoin to uppercase.
    * 3. Get history from historicalData.
-   * 4. If we have historicalData...
-   *    4a. Set price as the last member of historicalData.
-   * 5. Else...
-   *    5a. Set price as null.
-   * 6. Set the latest candle as null.
+   * 4. Get a map from allCoinsBuffer.
+   *    4a. Sort it.
+   *    4b. Get the last member.
+   * 5. If we have something in allCoinsBuffer...
+   *    5a. Use it: set price and candle.
+   * 6. Else if we have historicalData...
+   *    4a. Use it: set price and candle.
+   * 7. Else...
+   *    5a. Set price and candle as null.
    */
   useEffect(() => {
     activeCoinRef.current = selectedCoin;
 
     const coin = selectedCoin.toUpperCase();
     const history = historicalData[coin] || [];
+    const liveMap = allCoinsBuffer.current[coin];
 
-    if (history.length > 0) {
+    const liveArray = liveMap ? Array.from(liveMap.values()).sort((a, b) => a.time - b.time) : [];
+    const lastLive = liveArray.length > 0 ? liveArray[liveArray.length - 1] : null;
+
+    if (lastLive) {
+      setPrice(lastLive.close);
+      setLatestCandle(lastLive);
+    } else if (history.length > 0) {
       setPrice(history[history.length - 1].close);
+      setLatestCandle(null)
     } else {
       setPrice(null);
+      setLatestCandle(null);
     }
-
-    setLatestCandle(null);
   }, [selectedCoin, historicalData]);
 
   /* Receives live kline data from the backend, parses it, and updates
