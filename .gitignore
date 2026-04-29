@@ -18,7 +18,6 @@ dist-ssr
 */.vite/*
 
 # Playwright
-node_modules/
 MarketUI/test-results/
 MarketUI/playwright-report/
 MarketUI/blob-report/
@@ -42,8 +41,8 @@ build/*
 .cache
 
 # UserData 
-\userData\transactionHistory.csv
-\userData\holdings.csv
+/userData/transactionHistory.csv
+/userData/holdings.csv
 ### CMake ###
 CMakeLists.txt.user
 CMakeCache.txt
