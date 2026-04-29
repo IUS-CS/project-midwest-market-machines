@@ -18,11 +18,33 @@
 
 using namespace std;
 
+/* class Database_HandlerTest
+ *
+ * This class holds data items that will be used *throughout* the test suites.
+ * In accordance with gtest's guidelines, this class is derived from Test.
+ *
+ * We use SetUpTestSuite() and TearDownTestSuite() to setup / teardown *once*
+ * for the entire suite.
+ *
+ * unique_ptr<ix::WebSocketServer> is used to hold the Server.
+ * ServerThread holds the Server's thread.
+ */
 class Database_HandlerTest : public ::testing::Test {
 protected:
   static unique_ptr<ix::WebSocketServer> Server;
   static thread ServerThread;
 
+  /* static void SetUpTestSuite() {...}
+   *
+   * Sets up the server *once* for the test suite.
+   *
+   * 1. Sets a promise / future that the server is ready.
+   * 2. Sets the server's socket and address.
+   * 3. Sets the server's callback behavior.
+   * 4. Starts the server on its own thread (server is blocking!)
+   * 5. Checks to see if the server is ready.
+   * 6. Waits for up to 1s to see if the server grabs a port.
+   */
   static void SetUpTestSuite() {
     promise<bool> IsReady;
     future<bool> FutureServerReady = IsReady.get_future();
@@ -36,5 +58,27 @@ protected:
           if (NULL) {
           }
         });
+
+    ServerThread = thread([]() { Server->listenAndStart(); });
+    IsReady.set_value(Server->getPort());
+    FutureServerReady.wait_for(chrono::seconds(1));
+  }
+
+  /* static void TearDownTestSuite() {...}
+   *
+   * Tears down the server at the end of the test suite.
+   *
+   * 1. Calls to have the Server stop.
+   * 2. Joins the server's thread.
+   * 3. Resets the server.
+   */
+  static void TearDownTestSuite() {
+    Server->stop();
+
+    if (ServerThread.joinable()) {
+      ServerThread.join();
+    }
+
+    Server.reset();
   }
 };
