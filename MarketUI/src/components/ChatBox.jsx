@@ -12,10 +12,6 @@ import "../css/ChatBox.css";
  *       all live coin prices to the model and asking it to pick one
  *       to buy. The result is executed via onTrade() and logged in chat.
  *
- * ChatBox accepts two props:
- *    1. marketContext, a summar of market information - { coin, price, holdings, transactions, allCoinsSnapshot }
- *    2. onTrade(action, quantity, coin) - callback to execute a trade in
- *       useCryptoSocket
  */
 
 const OLLAMA_URL = "http://localhost:11434/api/chat";
@@ -61,21 +57,20 @@ Rules:
 const buildContextString = (marketContext) => {
   const { price, coin, holdings, transactions, allCoinsSnapshot } = marketContext;
 
+  const allPrices = allCoinsSnapshot
+    ? Object.entries(allCoinsSnapshot).map(([c, p]) => `${c}: $${p}`).join(" | ")
+    : "Loading...";
+  
   const holdingsSummary = holdings?.length
     ? holdings.map((h) => `${h.coin}: ${h.quantity}`).join(", ")
     : "No current holdings";
-
+  
   const transactionSummary = transactions?.length
     ? transactions
         .slice(-10)
         .map((t) => `${t.type?.toUpperCase() ?? "TRADE"} ${t.quantity} ${t.coin} @ $${t.price}`)
         .join(" | ")
     : "No transaction history";
-
-  const allPrices = allCoinsSnapshot
-    ? Object.entries(allCoinsSnapshot).map(([c, p]) => `${c}: $${p}`).join(" | ")
-    : "Loading...";
-
   return `
 === MARKET CONTEXT ===
 SELECTED COIN: ${coin ?? "N/A"} | LIVE PRICE: $${price ?? "N/A"}
@@ -95,8 +90,8 @@ ${transactionSummary}
  *
  * Builds the prompt used during the 30 second auto scan interval,
  * Passes all current coin prices and asks Qwen to pick one to buy,
- * Didn't have time to implement technical analysis, it's astrology for guys anyway.
- * https://www.chartguys.com/articles/inverted-hammer-vs-shooting-star
+ * Gave technical analysis responsibility to Qwen through sysprompt,
+ * which prevents it from overwhelmingly prefering no action.
  * Temperature is set to 0.8 at call time to encourage varied picks across successive scans.
  */
 const buildAutoScanPrompt = (allCoinsSnapshot) => {
@@ -108,9 +103,11 @@ const buildAutoScanPrompt = (allCoinsSnapshot) => {
 === AUTO SCAN: ALL COIN PRICES ===
 ${prices}
 
-You are doing a routine market scan. Pick ONE coin from the list above to buy or sell 1 unit of.
-Choose randomly or based on gut feeling - no technical analysis needed.
-Randomly decide whether to buy or sell. Set action to either "buy" or "sell", quantity to 1, and coin to your chosen coin symbol.
+You are professional technical analyst doing a routine market scan, Pick ONE coin from the list above to buy or sell 1 unit of,
+or choose to take no action. Base your decision purely on the price data provided, you have no other information. 
+Respond ONLY with a JSON object containing action, quantity, and coin fields. Action can be "buy", "sell", or "none". 
+Quantity should be 1 if buying or selling, and 0 if taking no action. Coin should be the symbol of the coin you choose to trade, 
+or blank if action is "none".
   `.trim();
 };
 
@@ -139,7 +136,7 @@ const ChatBox = ({ marketContext = {}, onTrade }) => {
   useEffect(() => {
     const interval = setInterval(async () => {
       const { allCoinsSnapshot } = marketContext;
-      if (!allCoinsSnapshot || Object.keys(allCoinsSnapshot).length === 0) return;
+      if (!allCoinsSnapshot || Object.keys(allCoinsSnapshot).length < COINS.length) return;
 
       try {
         const payload = {
@@ -164,16 +161,23 @@ const ChatBox = ({ marketContext = {}, onTrade }) => {
         const data = await response.json();
         const parsed = JSON.parse(data.message?.content ?? "{}");
 
-        const action = ["buy", "sell"].includes(parsed.action) ? parsed.action : "buy";
+        const action = ["buy", "sell"].includes(parsed.action) ? parsed.action : null;
         const quantity = Number(parsed.quantity) || 1;
-        const coin = parsed.coin ?? COINS[Math.floor(Math.random() * COINS.length)];
-        const message = parsed.message || `Auto-buying ${coin}.`;
+        const coin = COINS.includes(parsed.coin) ? parsed.coin : null;
+        const message = parsed.message || "Market scan complete.";
 
-        if (onTrade) onTrade(action, quantity, coin);
-        setMessages((prev) => [
-          ...prev,
+        if (action !== null && coin !== null && onTrade) {
+            onTrade(action, quantity, coin);
+            setMessages((prev) => [
+            ...prev,
           { sender: "bot", text: `[AUTO-SCAN] ${message}\n[EXECUTED]: ${action.toUpperCase()} ${quantity} ${coin}` },
-        ]);
+         ]);
+         } else {  
+          setMessages((prev) => [
+          ...prev,
+          { sender: "bot", text: `[AUTO-SCAN] ${message}` },
+          ]);
+          }
       } catch {
         // silent skip - don't flood the chat with connection errors during auto-scan
       }
