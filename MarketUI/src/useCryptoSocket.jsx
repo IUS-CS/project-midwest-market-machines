@@ -28,9 +28,16 @@ const useCryptoSocket = (selectedCoin) => {
    * The websocket handlers use the activeCoinRef to determine the
    * currently selected coin.
    *
+   * Additionally updates setPrice based on the active coin.
+   *
    * 1. Set activeCoinRef.current to selectedCoin.
-   * 2. Set price as null.
-   * 3. Set latest candle as null.
+   * 2. Normalize selectedCoin to uppercase.
+   * 3. Get history from historicalData.
+   * 4. If we have historicalData...
+   *    4a. Set price as the last member of historicalData.
+   * 5. Else...
+   *    5a. Set price as null.
+   * 6. Set the latest candle as null.
    */
   useEffect(() => {
     activeCoinRef.current = selectedCoin;
