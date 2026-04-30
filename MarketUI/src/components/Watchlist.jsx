@@ -8,8 +8,8 @@ const Watchlist = ({ onCoin, currentCoin }) => {
   return (
     <div className="watchlist-wrapper-div">
       <nav className="watchlist">
-        <h2>My Watchlist</h2>
-        <ul>
+        <h2 className="text-2xl font-bold mb-4">My Watchlist</h2>
+        <ul className="list-disc list-inside">
           {/* Maps through the coins array to generate a clickable list item dynamically for each coin. 
           Logic could be extended or merged to generate new coin charts.
           */}
