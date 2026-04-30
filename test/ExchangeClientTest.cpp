@@ -10,6 +10,7 @@
  */
 
 #include "ExchangeClient.h"
+#include "ixwebsocket/IXNetSystem.h"
 #include "ixwebsocket/IXWebSocket.h"
 #include "ixwebsocket/IXWebSocketErrorInfo.h"
 #include "ixwebsocket/IXWebSocketMessage.h"
@@ -77,6 +78,7 @@ protected:
    * 6. Waits for up to 1s to see if the server grabs a port.
    */
   static void SetUpTestSuite() {
+    ix::initNetSystem();
     promise<bool> IsReady;
     future<bool> FutureServerReady = IsReady.get_future();
 
@@ -139,6 +141,9 @@ public:
  * ExchangeClient.
  */
 class MockClientHooks {
+protected:
+  void SetUp() { ix::initNetSystem(); }
+
 public:
   MOCK_METHOD(void, OnOpen, (), ());
   MOCK_METHOD(void, OnMessage, (const string &msg), ());

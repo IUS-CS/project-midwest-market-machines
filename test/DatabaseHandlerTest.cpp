@@ -9,6 +9,7 @@
 
 #include "Database_Handler.h"
 #include "ixwebsocket/IXConnectionState.h"
+#include "ixwebsocket/IXNetSystem.h"
 #include "ixwebsocket/IXWebSocket.h"
 #include "ixwebsocket/IXWebSocketMessage.h"
 #include "ixwebsocket/IXWebSocketMessageType.h"
@@ -51,6 +52,7 @@ protected:
    * 6. Waits for up to 1s to see if the server grabs a port.
    */
   static void SetUpTestSuite() {
+    ix::initNetSystem();
     filesystem::create_directories("./testData/");
 
     promise<bool> IsReady;
@@ -116,6 +118,7 @@ protected:
   ix::WebSocket *socket;
 
   void SetUp() override {
+    ix::initNetSystem();
     filesystem::create_directories("./testData/");
     Database = new Database_Handler("./testData/");
   }
