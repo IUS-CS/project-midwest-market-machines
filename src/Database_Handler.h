@@ -67,20 +67,22 @@ public:
     {
       ifstream file(path + "holdings.csv");
       if (!file.is_open()) {
+        ofstream NewHoldings(path + "holdings.csv");
+        NewHoldings.close();
         printf(
             "Database_Handler: error reading holdings.csv\n"); // Excessive test
                                                                // logging
-      } else {
-        string line;
-        while (getline(file, line)) {
-          if (line.empty())
-            continue;
-          stringstream ss(line);
-          string mappedCoin, mappedQty;
-          getline(ss, mappedCoin, ',');
-          getline(ss, mappedQty, ',');
-          holdings[mappedCoin] = atof(mappedQty.c_str());
-        }
+      }
+
+      string line;
+      while (getline(file, line)) {
+        if (line.empty())
+          continue;
+        stringstream ss(line);
+        string mappedCoin, mappedQty;
+        getline(ss, mappedCoin, ',');
+        getline(ss, mappedQty, ',');
+        holdings[mappedCoin] = atof(mappedQty.c_str());
       }
     }
 

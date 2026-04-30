@@ -18,6 +18,7 @@
 #include <filesystem>
 #include <future>
 #include <gmock/gmock.h>
+#include <string>
 
 using namespace std;
 
@@ -104,33 +105,72 @@ public:
               (ix::WebSocket & webSocket, const string &coin), ());
 };
 
+/* Class TestDB
+ *
+ * This is a test fixture class. Its primary purpose is to ensure there is
+ * always a Database, Hooks, the proper directory, and that all are torn down on
+ * test completion.
+ *
+ * SetUp() and TearDown() run before and after each test, respectively.
+ */
+class TestDB : public ::testing::Test {
+protected:
+  Database_Handler *Database;
+  MockDatabaseHooks *Hooks;
+
+  void SetUp() override {
+    filesystem::create_directories("./testData/");
+    Database = new Database_Handler("./testData/");
+    Hooks = new MockDatabaseHooks();
+  }
+  void TearDown() override {
+    filesystem::remove_all("./testData/");
+    delete Database;
+    delete Hooks;
+  }
+};
+
 //----------------------- GLOBALS ------------------------------------------
 int port = 9999;
 string host = "127.0.0.1";
 
-/*
+/* Record_A_Transaction
+ *
+ * This test attempts to save a transaction using recordTransaction.
+ * Then, we read the test manually from the .csv file.
+ *
+ * 1. Assemble a JSON of a typical buy transaction.
+ * 2. Call the Database to record it.
+ * 3. Read from the transactionHistory.csv and parse into a JSON.
+ * 4. Assert the input JSON is equal to the found JSON.
  */
-TEST(Database_Handler, Record_A_Transaction) {
-  filesystem::create_directories("./testData/");
-  Database_Handler Database("./testData/");
-  MockDatabaseHooks Hooks;
+TEST_F(TestDB, Record_A_Transaction) {
   json Transaction, Found;
+  string line;
+  map<string, double> userHoldings;
 
   Transaction["type"] = "buy";
   Transaction["coin"] = "BTCUSDT";
-  Transaction["price"] = 70808;
+  Transaction["price"] = 70808.0;
   Transaction["quantity"] = 1.00;
 
-  // EXPECT_CALL(Hooks, recordTransaction(&Transaction));
-
-  Database.recordTransaction(&Transaction);
+  Database->recordTransaction(&Transaction);
 
   ifstream file("./testData/transactionHistory.csv");
-  if (file.is_open()) {
-    string line;
-    getline(file, line);
+  while (getline(file, line)) {
+    if (line.empty())
+      continue;
+    stringstream ss(line);
+    string type, coin, price, qty;
+    getline(ss, type, ',');
+    getline(ss, coin, ',');
+    getline(ss, price, ',');
+    getline(ss, qty, ',');
 
-    Found = Found.parse(line);
+    Found["type"] = type;
+    Found["coin"] = coin;
+    Found["price"] = atof(price.c_str());
+    Found["quantity"] = atof(qty.c_str());
   }
 
   ASSERT_EQ(Transaction.dump(), Found.dump());
