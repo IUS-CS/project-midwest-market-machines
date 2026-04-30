@@ -274,6 +274,7 @@ TEST_F(TestDB, Record_10_Transactions) {
 TEST_F(Database_HandlerTest, Holdings_Are_Sent) {
   ofstream Holding("./testData/holdings.csv");
   Holding << "BTCUSDT,1.5" << endl;
+  Holding.close();
 
   promise<json> ReceivedHolding;
   future<json> FutureReceivedHolding = ReceivedHolding.get_future();
@@ -306,4 +307,190 @@ TEST_F(Database_HandlerTest, Holdings_Are_Sent) {
   EXPECT_EQ(result["last"], true);
 
   client.stop();
+}
+
+/* Transactions_Are_Sent
+ *
+ * This test uses the Database_HandlerTest fixture.
+ * Here, we claim that when given a valid transaction to send, and a webSocket
+ * client connecting to a server calling the sendTransactionHistory() method, we
+ * receive a transaction from transactionHistory.csv
+ *
+ * 1. Put a "basic" transaction into "./testData/transactionHistory.csv"
+ * 2. Get a promise / future JSON.
+ * 3. Make a webSocket client.
+ *    3a. Set its url.
+ * 4. Set the client's callback behavior.
+ *    4a. If we received a message, parse it into a JSON.
+ *    4b. If that message is a transaction, set our promise to the received
+ *        JSON.
+ * 5. Start the client.
+ * 6. Assert the future is ready, and wait up to one second for it.
+ * 7. Get the result from the future.
+ * 8. Expect that each member of our result matches what should have been sent.
+ *    8a. The data from data from our "basic" transaction.
+ *    8b. The dataType of "transaction"
+ *    8c. The last transaction flag is set, since we only inserted one
+ *        transaction.
+ * 9. Stop the client.
+ */
+TEST_F(Database_HandlerTest, Transactions_Are_Sent) {
+  ofstream Transaction("./testData/transactionHistory.csv");
+  Transaction << "buy,BTCUSDT,70808.2,3,1777423915" << endl;
+  Transaction.close();
+
+  promise<json> ReceivedTransaction;
+  future<json> FutureReceivedTransaction = ReceivedTransaction.get_future();
+
+  ix::WebSocket client;
+  client.setUrl("ws://127.0.0.1:9999");
+  client.setOnMessageCallback([&](const ix::WebSocketMessagePtr &msg) {
+    if (msg->type == ix::WebSocketMessageType::Message) {
+      json Received = json::parse(msg->str);
+
+      if (Received["dataType"] == "transaction") {
+        try {
+          ReceivedTransaction.set_value(Received);
+        } catch (const future_error &error) {
+        }
+      }
+    }
+  });
+
+  client.start();
+
+  ASSERT_EQ(FutureReceivedTransaction.wait_for(chrono::seconds(1)),
+            future_status::ready);
+
+  json result = FutureReceivedTransaction.get();
+
+  EXPECT_EQ(result["dataType"], "transaction");
+  EXPECT_EQ(result["type"], "buy");
+  EXPECT_EQ(result["coin"], "BTCUSDT");
+  EXPECT_EQ(result["price"], 70808.2);
+  EXPECT_EQ(result["quantity"], 3);
+  EXPECT_EQ(result["last"], true);
+
+  client.stop();
+}
+
+/* Ten_Transactions_Are_Sent
+ *
+ * Uses the Database_HandlerTest fixture. Uses the same setup and general logic
+ * from Record_10_Transactions to record 10 random transactions. We then assert
+ * that given a webSocket client and a server which calls
+ * sendTransactionHistory(), we will get the same 10 random transactions back.
+ *
+ * 1.  Generate random of types, coins, prices, quantities...
+ * 2.  Place those all in their respective vectors.
+ * 3.  Do this 10 times:
+ *     3a. Assemble a JSON from the vectors of semi-random info.
+ *     3b. Call the Database to record it.
+ *     3c. Record onto TransactionsVector.
+ * 4.  Get a promise / future for a JSON vector.
+ * 5.  Make a webSocket client.
+ *     5a. Set its url.
+ * 6.  Set the client's callback behavior
+ *     6a. If we received a message, parse it into a JSON.
+ *     6b. If that message is a transaction, push it onto the vector.
+ *         a. If it is the last transaction, set our promise to the JSON vector.
+ * 7.  Start the client.
+ * 8.  Assert the future is ready, and wait up to one second for it.
+ * 9.  Get the result from the future.
+ * 10. Expect that each member of our result matches what should have been sent.
+ * 11. Stop client, clean up pointers.
+ */
+TEST_F(Database_HandlerTest, Ten_Transactions_Are_Sent) {
+  Database_Handler *Database = new Database_Handler("./testData/");
+  mutex PushLocker;
+  json Transaction;
+  vector<json> TransactionsVector;
+
+  random_device RAND;
+  mt19937 Generator(RAND());
+
+  uniform_int_distribution<> CoinFlip(0, 1);
+  uniform_int_distribution<> CoinSelector(0, 5);
+  uniform_real_distribution<double> DoubleDist(0.0, 100000.0);
+
+  vector<string> TransactionTypes;
+  vector<string> Coins;
+  vector<double> Prices;
+  vector<double> Quantities;
+
+  auto PickACoin = [&]() {
+    switch (CoinSelector(Generator)) {
+    case 0:
+      return "BTCUSDT";
+    case 1:
+      return "ETHUSDT";
+    case 2:
+      return "ADAUSDT";
+    case 3:
+      return "XRPUSDT";
+    case 4:
+      return "DOTUSDT";
+    case 5:
+      return "UNIUSDT";
+    default:
+      return "BTCUSDT";
+    }
+  };
+
+  for (int i = 0; i < 10; i++) {
+    TransactionTypes.push_back(CoinFlip(Generator) == 0 ? "buy" : "sell");
+    Coins.push_back(PickACoin());
+    Prices.push_back(floor(DoubleDist(Generator)));
+    Quantities.push_back(floor(DoubleDist(Generator)));
+  }
+
+  for (int i = 0; i < 10; i++) {
+    Transaction["type"] = TransactionTypes[i];
+    Transaction["coin"] = Coins[i];
+    Transaction["price"] = Prices[i];
+    Transaction["quantity"] = Quantities[i];
+
+    Database->recordTransaction(&Transaction);
+    TransactionsVector.push_back(Transaction);
+  }
+
+  vector<json> ReceivedJSONs;
+  promise<vector<json>> ReceivedPromise;
+  future<vector<json>> FutureReceivedPromise = ReceivedPromise.get_future();
+
+  ix::WebSocket client;
+  client.setUrl("ws://127.0.0.1:9999");
+  client.setOnMessageCallback([&](const ix::WebSocketMessagePtr &msg) {
+    if (msg->type == ix::WebSocketMessageType::Message) {
+      json received = json::parse(msg->str);
+
+      if (received["dataType"] == "transaction") {
+        lock_guard<mutex> lock(PushLocker);
+        ReceivedJSONs.push_back(received);
+
+        if (received["last"] == true || ReceivedJSONs.size() == 10) {
+          try {
+            ReceivedPromise.set_value(ReceivedJSONs);
+          } catch (const future_error &error) {
+          }
+        }
+      }
+    }
+  });
+
+  client.start();
+
+  ASSERT_EQ(FutureReceivedPromise.wait_for(chrono::seconds(1)),
+            future_status::ready);
+  vector<json> received = FutureReceivedPromise.get();
+
+  for (int i = 0; i < received.size(); i++) {
+    EXPECT_EQ(received[i]["coin"], TransactionsVector[i]["coin"]);
+    EXPECT_EQ(received[i]["price"], TransactionsVector[i]["price"]);
+    EXPECT_EQ(received[i]["quantity"], TransactionsVector[i]["quantity"]);
+    EXPECT_EQ(received[i]["type"], TransactionsVector[i]["type"]);
+  }
+
+  client.stop();
+  delete Database;
 }
