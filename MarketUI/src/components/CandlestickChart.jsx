@@ -10,6 +10,8 @@ const CandlestickChart = ({ coin, latestCandle, historicalCandles }) => {
   const chartContainerRef = useRef(null);
   const chartRef = useRef(null);
   const seriesRef = useRef(null);
+  const lastCoinRef = useRef(null);
+  const dataLoadedRef = useRef(false);
 
   // Create the chart once on mount
   useEffect(() => {
@@ -73,31 +75,55 @@ const CandlestickChart = ({ coin, latestCandle, historicalCandles }) => {
     };
   }, []);
 
-
-  useEffect(() => {
-    if (seriesRef.current) {
-      seriesRef.current.setData([]);
-    }
-  }, [coin]);
-
+  /* Updates the chart with the data for the currently selected coin.
+   * We update incrementally, unless the coin name changes or the histroical data
+   * has JUST arrived.
+   * 
+   * 1. If we get an update that is *not* for the current coin, return.
+   * 2. Get a bool 'coinChanged' that tracks whether the coin changed or not.
+   * 2. If the coin changes...
+   *    2a. Set dataLoadedRef = false;
+   *    2b. Update the lastCoinRef's current to be this coin.
+   * 3. If the coin changed, or dataLoadedRef is false and we have historical data...
+   *    3a. Set the chart data from historicalCandles or an empty array if none.
+   *    3b. If we have historical data...
+   *        1. Adjust the chart timescale to fit.
+   *        2. Set dataLoadedRef = true;
+   *    3c. If coin changes or we have loaded data... return.
+   * 4. If we have a latestCandle and it has a valid time...
+   *    4a. Try-catch to update the chart.
+   *    4b. Print a warning w/ error message if it failed.
+  */
   useEffect(() => {
     if (!seriesRef.current) return;
 
-    seriesRef.current.setData(historicalCandles || []);
+    const coinChanged = lastCoinRef.current !== coin;
 
-    if (historicalCandles && historicalCandles.length > 0) {
-      chartRef.current?.timeScale().fitContent();
+    if (coinChanged) {
+      dataLoadedRef.current = false;
+      lastCoinRef.current = coin;
     }
-  }, [coin, historicalCandles]);
 
-  useEffect(() => {
-    if (!seriesRef.current || !latestCandle || !latestCandle.time) return;
-    try {
-      seriesRef.current.update(latestCandle);
-    } catch (err) {
-      console.warn('[CandlestickChart] Live update failed:', err.message);
+    // Check if the coin changed, or we're doing our first setData call.
+    if (coinChanged || (!dataLoadedRef.current && historicalCandles.length > 0)) {
+      seriesRef.current.setData(historicalCandles || []);
+
+      if (historicalCandles.length > 0) {
+        chartRef.current?.timeScale().fitContent();
+        dataLoadedRef.current = true;
+      }
+
+      if (coinChanged || dataLoadedRef.current) return;
     }
-  }, [latestCandle]);
+
+    if (latestCandle && latestCandle.time) {
+      try {
+        seriesRef.current.update(latestCandle);
+      } catch (err) {
+        console.warn('[Chart] Live update failed:', err.message);
+      }
+    }
+  }, [coin, latestCandle, historicalCandles]);
 
   return <div ref={chartContainerRef} className="ChartContainer" />;
 };
