@@ -17,6 +17,13 @@ dist-ssr
 ### Vite ###
 */.vite/*
 
+# Playwright
+MarketUI/test-results/
+MarketUI/playwright-report/
+MarketUI/blob-report/
+MarketUI/playwright/.cache/
+MarketUI/playwright/.auth/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
@@ -185,6 +192,8 @@ fabric.properties
 
 # mpeltonen/sbt-idea plugin
 
+# Test Coverage
+MarketUI/coverage/
 # JIRA plugin
 
 # Cursive Clojure plugin
