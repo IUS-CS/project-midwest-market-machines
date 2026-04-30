@@ -18,6 +18,7 @@
 #include <filesystem>
 #include <future>
 #include <gmock/gmock.h>
+#include <random>
 #include <string>
 
 using namespace std;
@@ -117,6 +118,7 @@ class TestDB : public ::testing::Test {
 protected:
   Database_Handler *Database;
   MockDatabaseHooks *Hooks;
+  ix::WebSocket *socket;
 
   void SetUp() override {
     filesystem::create_directories("./testData/");
@@ -147,7 +149,6 @@ string host = "127.0.0.1";
 TEST_F(TestDB, Record_A_Transaction) {
   json Transaction, Found;
   string line;
-  map<string, double> userHoldings;
 
   Transaction["type"] = "buy";
   Transaction["coin"] = "BTCUSDT";
@@ -174,4 +175,91 @@ TEST_F(TestDB, Record_A_Transaction) {
   }
 
   ASSERT_EQ(Transaction.dump(), Found.dump());
+}
+
+/* Record_10_Transactions
+ *
+ * This test functions almost exactly the same as the above test,
+ * Record_A_Transaction, except we record 10 transactions, and assert that each
+ * transaction read is equal to what was recorded.
+ *
+ * 1. Generate random of types, coins, prices, quantities...
+ * 2. Place those all in their respective vectors.
+ * 3. Do this 10 times:
+ *    3a. Assemble a JSON from the vectors of semi-random info.
+ *    3b. Call the Database to record it.
+ *    3c. Read a JSON from the csv.
+ *    3d. Assert these JSONs are equal.
+ */
+TEST_F(TestDB, Record_10_Transactions) {
+  json Transaction, Found;
+  string line;
+
+  random_device RAND;
+  mt19937 Generator(RAND());
+
+  uniform_int_distribution<> CoinFlip(0, 1);
+  uniform_int_distribution<> CoinSelector(0, 5);
+  uniform_real_distribution<double> DoubleDist(0.0, 100000.0);
+
+  vector<string> TransactionTypes;
+  vector<string> Coins;
+  vector<double> Prices;
+  vector<double> Quantities;
+
+  auto PickACoin = [&]() {
+    switch (CoinSelector(Generator)) {
+    case 0:
+      return "BTCUSDT";
+    case 1:
+      return "ETHUSDT";
+    case 2:
+      return "ADAUSDT";
+    case 3:
+      return "XRPUSDT";
+    case 4:
+      return "DOTUSDT";
+    case 5:
+      return "UNIUSDT";
+    default:
+      return "BTCUSDT";
+    }
+  };
+
+  for (int i = 0; i < 10; i++) {
+    TransactionTypes.push_back(CoinFlip(Generator) == 0 ? "buy" : "sell");
+    Coins.push_back(PickACoin());
+    Prices.push_back(floor(DoubleDist(Generator)));
+    Quantities.push_back(floor(DoubleDist(Generator)));
+  }
+
+  for (int i = 0; i < 10; i++) {
+    Transaction["type"] = TransactionTypes[i];
+    Transaction["coin"] = Coins[i];
+    Transaction["price"] = Prices[i];
+    Transaction["quantity"] = Quantities[i];
+
+    Database->recordTransaction(&Transaction);
+
+    ifstream file("./testData/transactionHistory.csv");
+    while (getline(file, line)) {
+      if (line.empty())
+        continue;
+      stringstream ss(line);
+      string type, coin, price, qty;
+      getline(ss, type, ',');
+      getline(ss, coin, ',');
+      getline(ss, price, ',');
+      getline(ss, qty, ',');
+
+      Found["type"] = type;
+      Found["coin"] = coin;
+      Found["price"] = atof(price.c_str());
+      Found["quantity"] = atof(qty.c_str());
+    }
+
+    file.close();
+
+    ASSERT_EQ(Transaction.dump(), Found.dump());
+  }
 }
