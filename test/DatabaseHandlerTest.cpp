@@ -280,6 +280,7 @@ TEST_F(TestDB, Record_10_Transactions) {
  * 9. Stop the client
  */
 TEST_F(Database_HandlerTest, Holdings_Are_Sent) {
+  filesystem::remove_all("./testData/holdings.csv");
   ofstream Holding("./testData/holdings.csv");
   Holding << "BTCUSDT,1.5" << endl;
   Holding.close();
@@ -315,6 +316,7 @@ TEST_F(Database_HandlerTest, Holdings_Are_Sent) {
   EXPECT_EQ(result["last"], true);
 
   client.stop();
+  filesystem::remove_all("./testData/holdings.csv");
 }
 
 /* Transactions_Are_Sent
@@ -343,6 +345,7 @@ TEST_F(Database_HandlerTest, Holdings_Are_Sent) {
  * 9. Stop the client.
  */
 TEST_F(Database_HandlerTest, Transactions_Are_Sent) {
+  filesystem::remove_all("./testData/transactionHistory.csv");
   ofstream Transaction("./testData/transactionHistory.csv");
   Transaction << "buy,BTCUSDT,70808.2,3,1777423915" << endl;
   Transaction.close();
@@ -380,6 +383,7 @@ TEST_F(Database_HandlerTest, Transactions_Are_Sent) {
   EXPECT_EQ(result["last"], true);
 
   client.stop();
+  filesystem::remove_all("./testData/transactionHistory.csv");
 }
 
 /* Ten_Transactions_Are_Sent
