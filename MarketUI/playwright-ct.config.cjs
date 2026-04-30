@@ -6,6 +6,7 @@ const path = require('path');
  */
 module.exports = defineConfig({
   testDir: './',
+  testMatch: /.*\.spec\.[jt]sx?/,
   /* The base directory, relative to the config file, for snapshot files created with toMatchSnapshot and toHaveScreenshot. */
   snapshotDir: './__snapshots__',
   /* Maximum time one test can run for. */
