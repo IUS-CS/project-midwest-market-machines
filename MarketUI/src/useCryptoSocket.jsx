@@ -21,6 +21,8 @@ const useCryptoSocket = (selectedCoin) => {
   const activeCoinRef = useRef(selectedCoin);
   const dbSocketRef = useRef(null);
   const allCoinsBuffer = useRef({});
+  const historicalBuffer = useRef({});
+  //-------------------------------------------------------------
 
   /* Keeps activeCoinRef in sync with the currently selected coin.
    * The websocket handlers use the activeCoinRef to determine the
