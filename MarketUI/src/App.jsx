@@ -28,7 +28,7 @@ function App() {
       <Navbar />
 
       <div className="App_header">
-        <h1>Simple Trade</h1>
+        <h1 className="text-5xl font-bold leading-tight">Simple Trade</h1>
         <p>Your one-stop shop for all things crypto!</p>
       </div>
       <div>
