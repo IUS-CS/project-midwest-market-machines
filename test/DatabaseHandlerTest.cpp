@@ -409,6 +409,7 @@ TEST_F(Database_HandlerTest, Transactions_Are_Sent) {
  * 11. Stop client, clean up pointers.
  */
 TEST_F(Database_HandlerTest, Ten_Transactions_Are_Sent) {
+  filesystem::remove_all("./testData/transactionHistory.csv");
   Database_Handler *Database = new Database_Handler("./testData/");
   mutex PushLocker;
   json Transaction;
@@ -501,6 +502,7 @@ TEST_F(Database_HandlerTest, Ten_Transactions_Are_Sent) {
 
   client.stop();
   delete Database;
+  filesystem::remove_all("./testData/transactionHistory.csv");
 }
 
 /* Sends_Historical_Data
