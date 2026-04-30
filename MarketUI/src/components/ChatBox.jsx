@@ -49,27 +49,27 @@ Rules:
  * Assembles the market context block injected into every manual chat request.
  * Sections:
  *    - MARKET CONTEXT: selected coin and its live price.
- *    - ALL COIN PRICES: flattened allCoinsSnapshot so the LLM can reference
+ *    - ALL COIN PRICES: flattened historicalCandles so the LLM can reference
  *      any coin's current price when the user asks about it.
  *    - CURRENT HOLDINGS: what the user currently holds.
  *    - RECENT TRANSACTIONS: last 10 trades for personalized responses.
  */
 const buildContextString = (marketContext) => {
-  const { price, coin, holdings, transactions, allCoinsSnapshot } = marketContext;
+  const { price, coin, holdings, transactions, historicalCandles } = marketContext;
 
-  const allPrices = allCoinsSnapshot
-    ? Object.entries(allCoinsSnapshot).map(([c, p]) => `${c}: $${p}`).join(" | ")
+  const allPrices = historicalCandles
+    ? Object.entries(historicalCandles).map(([c, p]) => `${c}: $${p}`).join(" | ")
     : "Loading...";
-  
+
   const holdingsSummary = holdings?.length
     ? holdings.map((h) => `${h.coin}: ${h.quantity}`).join(", ")
     : "No current holdings";
-  
+
   const transactionSummary = transactions?.length
     ? transactions
-        .slice(-10)
-        .map((t) => `${t.type?.toUpperCase() ?? "TRADE"} ${t.quantity} ${t.coin} @ $${t.price}`)
-        .join(" | ")
+      .slice(-10)
+      .map((t) => `${t.type?.toUpperCase() ?? "TRADE"} ${t.quantity} ${t.coin} @ $${t.price}`)
+      .join(" | ")
     : "No transaction history";
   return `
 === MARKET CONTEXT ===
@@ -94,9 +94,9 @@ ${transactionSummary}
  * which prevents it from overwhelmingly prefering no action.
  * Temperature is set to 0.8 at call time to encourage varied picks across successive scans.
  */
-const buildAutoScanPrompt = (allCoinsSnapshot) => {
-  const prices = allCoinsSnapshot
-    ? Object.entries(allCoinsSnapshot).map(([c, p]) => `${c}: $${p}`).join("\n")
+const buildAutoScanPrompt = (historicalCandles) => {
+  const prices = historicalCandles
+    ? Object.entries(historicalCandles).map(([c, p]) => `${c}: $${p}`).join("\n")
     : "No data yet";
 
   return `
@@ -135,15 +135,15 @@ const ChatBox = ({ marketContext = {}, onTrade }) => {
    */
   useEffect(() => {
     const interval = setInterval(async () => {
-      const { allCoinsSnapshot } = marketContext;
-      if (!allCoinsSnapshot || Object.keys(allCoinsSnapshot).length < COINS.length) return;
+      const { historicalCandles } = marketContext;
+      if (!historicalCandles || Object.keys(historicalCandles).length < COINS.length) return;
 
       try {
         const payload = {
           model: "qwen2.5:1.5b",
           messages: [
             { role: "system", content: buildSystemPrompt() },
-            { role: "user", content: buildAutoScanPrompt(allCoinsSnapshot) },
+            { role: "user", content: buildAutoScanPrompt(historicalCandles) },
           ],
           stream: false,
           options: { temperature: 0.8 },
@@ -171,17 +171,17 @@ const ChatBox = ({ marketContext = {}, onTrade }) => {
           : "Market scan complete.";
 
         if (action !== null && coin !== null && onTrade) {
-            onTrade(action, quantity, coin);
-            setMessages((prev) => [
-            ...prev,
-          { sender: "bot", text: `[AUTO-SCAN] ${message}\n[EXECUTED]: ${action.toUpperCase()} ${quantity} ${coin}` },
-         ]);
-         } else {  
+          onTrade(action, quantity, coin);
           setMessages((prev) => [
-          ...prev,
-          { sender: "bot", text: `[AUTO-SCAN] ${message}` },
+            ...prev,
+            { sender: "bot", text: `[AUTO-SCAN] ${message}\n[EXECUTED]: ${action.toUpperCase()} ${quantity} ${coin}` },
           ]);
-          }
+        } else {
+          setMessages((prev) => [
+            ...prev,
+            { sender: "bot", text: `[AUTO-SCAN] ${message}` },
+          ]);
+        }
       } catch {
         // silent skip - don't flood the chat with connection errors during auto-scan
       }
