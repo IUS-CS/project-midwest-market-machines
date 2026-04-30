@@ -63,10 +63,18 @@ protected:
            ix::WebSocket &webSocket,
            const ix::WebSocketMessagePtr &msg) -> void {
           Database_Handler db("./testData/");
+          Database_Handler Historical("../userData/");
 
           if (msg->type == ix::WebSocketMessageType::Open) {
             db.sendHoldingsData(webSocket);
             db.sendTransactionHistory(webSocket);
+
+            Historical.sendHistoricalData(webSocket, "btcusdt");
+            Historical.sendHistoricalData(webSocket, "ethusdt");
+            Historical.sendHistoricalData(webSocket, "adausdt");
+            Historical.sendHistoricalData(webSocket, "xrpusdt");
+            Historical.sendHistoricalData(webSocket, "dotusdt");
+            Historical.sendHistoricalData(webSocket, "uniusdt");
           }
         });
 
@@ -493,4 +501,90 @@ TEST_F(Database_HandlerTest, Ten_Transactions_Are_Sent) {
 
   client.stop();
   delete Database;
+}
+
+/* Sends_Historical_Data
+ *
+ * Uses the Database_HandlerTest fixture.
+ * In this test, we expect to receive historical data when given a valid
+ * webSocket client, and a server that calls sendHistoricalData(). In this case,
+ * we use the provided historical data in the userData directory.
+ *
+ * 1. Get a promise / future of JSON vectors.
+ * 2. Make a webSocket client.
+ *    2a. Set its url.
+ * 3. Set the client's callback behavior.
+ *    3a. If we get a message, parse it into a JSON.
+ *    3b. If the message's dataType is "historical", push it onto
+ *        ReceivedVector. 3c. If the last flag is set, set the ReceivedPromise
+ *        with ReceivedVector.
+ * 4. Start the client.
+ * 5. Assert the future is ready, and wait up to one second for it.
+ * 6. Get the result from the future.
+ * 7. For each received JSON:
+ *    7a. Expect any two adjacent JSONs are not equal (no duplicate histories).
+ *    7b. Expect dataType is not null, is a string, and is "historical"
+ *    7c. Expect coin is not null, is a number, and is any of "the coins"
+ *    7d. Expect time is not null, is a number, and strictly increments.
+ *    7e. Expect price is not null, is a number, and differs from its neighbors.
+ * 8. Stop the client.
+ */
+TEST_F(Database_HandlerTest, Sends_Historical_Data) {
+  mutex PushLocker;
+  vector<json> ReceivedVector;
+  promise<vector<json>> ReceivedPromise;
+  future<vector<json>> FutureReceivedPromise = ReceivedPromise.get_future();
+
+  ix::WebSocket client;
+  client.setUrl("ws://127.0.0.1:9999");
+  client.setOnMessageCallback([&](const ix::WebSocketMessagePtr &msg) {
+    if (msg->type == ix::WebSocketMessageType::Message) {
+      json received = json::parse(msg->str);
+
+      if (received["dataType"] == "historical") {
+        lock_guard<mutex> lock(PushLocker);
+        ReceivedVector.push_back(received);
+
+        if (received["last"] == true) {
+          try {
+            ReceivedPromise.set_value(ReceivedVector);
+          } catch (const future_error &error) {
+          }
+        }
+      }
+    }
+  });
+
+  client.start();
+
+  ASSERT_EQ(FutureReceivedPromise.wait_for(chrono::seconds(1)),
+            future_status::ready);
+
+  vector<json> Received = FutureReceivedPromise.get();
+
+  for (int i = 0; i < Received.size() - 1; i++) {
+    EXPECT_NE(Received[i], Received[i + 1]);
+
+    EXPECT_FALSE(Received[i]["dataType"].is_null());
+    EXPECT_TRUE(Received[i]["dataType"].is_string());
+    EXPECT_EQ(Received[i]["dataType"], "historical");
+
+    EXPECT_FALSE(Received[i]["coin"].is_null());
+    EXPECT_TRUE(Received[i]["coin"].is_string());
+    EXPECT_THAT(Received[i]["coin"],
+                testing::AnyOf(testing::Eq("btcusdt"), testing::Eq("ethusdt"),
+                               testing::Eq("adausdt"), testing::Eq("xrpusdt"),
+                               testing::Eq("dotusdt"), testing::Eq("uniusdt")));
+
+    EXPECT_FALSE(Received[i]["time"].is_null());
+    EXPECT_TRUE(Received[i]["time"].is_number());
+    EXPECT_NE(Received[i]["time"], Received[i + 1]["time"]);
+    EXPECT_TRUE(Received[i]["time"] < Received[i + 1]["time"]);
+
+    EXPECT_FALSE(Received[i]["price"].is_null());
+    EXPECT_TRUE(Received[i]["price"].is_number());
+    EXPECT_NE(Received[i]["price"], Received[i + 1]["price"]);
+  }
+
+  client.stop();
 }
