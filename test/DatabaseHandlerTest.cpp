@@ -94,20 +94,6 @@ protected:
   }
 };
 
-/* class MockDatabaseHooks
- *
- * This mocking class describes the four currently used mock methods from
- * Database_Handler.
- */
-class MockDatabaseHooks {
-public:
-  MOCK_METHOD(void, recordTransaction, (json * transactionData), ());
-  MOCK_METHOD(void, sendHoldingsData, (ix::WebSocket & webSocket), ());
-  MOCK_METHOD(void, sendTransactionHistory, (ix::WebSocket & webSocket), ());
-  MOCK_METHOD(void, sendHistoricalData,
-              (ix::WebSocket & webSocket, const string &coin), ());
-};
-
 /* Class TestDB
  *
  * This is a test fixture class. Its primary purpose is to ensure there is
@@ -119,24 +105,21 @@ public:
 class TestDB : public ::testing::Test {
 protected:
   Database_Handler *Database;
-  MockDatabaseHooks *Hooks;
   ix::WebSocket *socket;
 
   void SetUp() override {
     filesystem::create_directories("./testData/");
     Database = new Database_Handler("./testData/");
-    Hooks = new MockDatabaseHooks();
   }
   void TearDown() override {
     filesystem::remove_all("./testData/");
     delete Database;
-    delete Hooks;
   }
 };
 
 //----------------------- GLOBALS ------------------------------------------
-int port = 9999;
-string host = "127.0.0.1";
+unique_ptr<ix::WebSocketServer> Database_HandlerTest::Server = nullptr;
+thread Database_HandlerTest::ServerThread;
 
 /* Record_A_Transaction
  *
@@ -264,4 +247,63 @@ TEST_F(TestDB, Record_10_Transactions) {
 
     ASSERT_EQ(Transaction.dump(), Found.dump());
   }
+}
+
+/* Holdings_Are_Sent
+ *
+ * This test uses the Database_HandlerTest fixture.
+ * Here, we claim that given any valid holdings in the holdings.csv, the
+ * Database WebSocket server will send them on client connection.
+ *
+ * 1. Put a "basic" holding into "./testData/holdings.csv"
+ * 2. Get a promise / future JSON.
+ * 3. Make a webSocket client.
+ *    3a. Set its url.
+ * 4. Set the client's callback behavior.
+ *    4a. If we received a message, parse it into a JSON.
+ *    4b. If that message is a holding, set our promise to the recieved JSON.
+ * 5. Start the client.
+ * 6. Assert the future is ready, and wait up to one second for it.
+ * 7. Get the result from the future.
+ * 8. Expect each member of our result matches what should have been sent.
+ *    8a. The data from our "basic" holding.
+ *    8b. The dataType of "holding"
+ *    8c. The last holding flag is set, since we only inserted one holding.
+ * 9. Stop the client
+ */
+TEST_F(Database_HandlerTest, Holdings_Are_Sent) {
+  ofstream Holding("./testData/holdings.csv");
+  Holding << "BTCUSDT,1.5" << endl;
+
+  promise<json> ReceivedHolding;
+  future<json> FutureReceivedHolding = ReceivedHolding.get_future();
+
+  ix::WebSocket client;
+  client.setUrl("ws://127.0.0.1:9999");
+  client.setOnMessageCallback([&](const ix::WebSocketMessagePtr &msg) {
+    if (msg->type == ix::WebSocketMessageType::Message) {
+      json Received = json::parse(msg->str);
+
+      if (Received["dataType"] == "holding") {
+        try {
+          ReceivedHolding.set_value(Received);
+        } catch (const future_error &error) {
+        }
+      }
+    }
+  });
+
+  client.start();
+
+  ASSERT_EQ(FutureReceivedHolding.wait_for(chrono::seconds(1)),
+            future_status::ready);
+
+  json result = FutureReceivedHolding.get();
+
+  EXPECT_EQ(result["coin"], "BTCUSDT");
+  EXPECT_EQ(result["quantity"], 1.5);
+  EXPECT_EQ(result["dataType"], "holding");
+  EXPECT_EQ(result["last"], true);
+
+  client.stop();
 }
