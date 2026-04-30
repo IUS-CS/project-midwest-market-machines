@@ -9,14 +9,8 @@ const Navbar = () => {
         <div className="navbar-logo">
           <h1>MARKET MACHINE</h1>
         </div>
-    {/* Spacer div to push the links to the right side of the navbar */}
-      <div className="navbar-spacer" />
-
-        <ul className="navbar-links">
-          <li><a href="#">Home</a></li>
-          <li><a href="#">About</a></li>
-          <li><a href="#">Contact</a></li>
-        </ul>
+        {/* Spacer div to push the links to the right side of the navbar */}
+        <div className="navbar-spacer" />
       </nav>
     </div>
   )

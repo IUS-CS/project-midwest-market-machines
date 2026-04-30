@@ -24,7 +24,7 @@ function App() {
   /* (4) Data Channel: WebSocket hook listens for changes to currentCoin and returns price.
    * transactions and allCoinsSnapshot added  transactions feeds the AI trade history,
    * allCoinsSnapshot feeds the AI a live price map of every coin for auto-scan trading. */
-  const { price, latestCandle, holdings, transactions, trade, historicalCandles, allCoinsSnapshot } = useCryptoSocket(currentCoin);
+  const { price, latestCandle, holdings, transactions, trade, historicalCandles } = useCryptoSocket(currentCoin);
 
   return (
     <>
@@ -56,7 +56,7 @@ function App() {
         * onTrade now forwards an optional coin argument so the AI can trade any coin,
         * not just the one currently selected in the Watchlist. */}
       <ChatBox
-        marketContext={{ coin: currentCoin, price, holdings, transactions, allCoinsSnapshot }}
+        marketContext={{ coin: currentCoin, price, holdings, transactions, historicalCandles }}
         onTrade={(action, quantity, coin) => trade(action, quantity, coin)}
       />
     </>

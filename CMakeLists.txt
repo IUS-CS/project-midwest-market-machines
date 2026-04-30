@@ -143,6 +143,22 @@ add_executable(
   test/ExchangeClientTest.cpp
 )
 
+add_executable(
+  DatabaseHandlerTest
+  test/DatabaseHandlerTest.cpp
+)
+
+target_link_libraries(
+  DatabaseHandlerTest
+  PRIVATE
+  gtest
+  GTest::gtest_main
+  GTest::gmock
+  GTest::gmock_main
+  nlohmann_json::nlohmann_json
+  ixwebsocket
+)
+
 if(WIN32)
   target_link_libraries(
   ExchangeClientTest
@@ -174,5 +190,12 @@ target_include_directories(
   src
 )
 
+target_include_directories(
+  DatabaseHandlerTest
+  PRIVATE
+  src
+)
+
 gtest_discover_tests(ExchangeClientTest)
 gtest_discover_tests(SmokeTest)
+gtest_discover_tests(DatabaseHandlerTest)
