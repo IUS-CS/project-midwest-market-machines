@@ -41,20 +41,48 @@ const useCryptoSocket = (selectedCoin) => {
    * https://developer.mozilla.org/en-US/docs/Web/API/WebSockets_API
   */
   useEffect(() => {
-    const socket = new WebSocket(SOCKET_URL);
+    let socket;
+    let unmounted = false;
 
-    socket.onmessage = (event) => {
-      const jsonReceived = JSON.parse(event.data);
-      setLastJsonMessage(jsonReceived);
-    }
-    return () => socket.close();
+    const connect = () => {
+      socket = new WebSocket(SOCKET_URL);
+      socket.onmessage = (event) => {
+        try {
+          const jsonReceived = JSON.parse(event.data);
+          setLastJsonMessage(jsonReceived);
+        } catch {
+          // ignore non-JSON handshake messages (e.g. "Connected")
+        }
+      };
+      socket.onclose = () => {
+        if (!unmounted) setTimeout(connect, 3000);
+      };
+    };
+
+    connect();
+    return () => {
+      unmounted = true;
+      socket?.close();
+    };
   }, []);
 
   useEffect(() => {
-    const socket = new WebSocket(DB_URL);
-    dbSocketRef.current = socket;
-    socket.onmessage = (event) => {
-      const data = JSON.parse(event.data);
+    let unmounted = false;
+
+    const connect = () => {
+      const socket = new WebSocket(DB_URL);
+      dbSocketRef.current = socket;
+      socket.onclose = () => {
+        if (!unmounted) setTimeout(connect, 3000);
+      };
+      socket.onmessage = (event) => {
+        let data;
+        try {
+          data = JSON.parse(event.data);
+        } catch {
+          // ignore non-JSON handshake messages (e.g. "Connected")
+          return;
+        }
 
       if (data.dataType === "holding") {
         setHoldings((prev) => [...prev, data]);
@@ -88,7 +116,13 @@ const useCryptoSocket = (selectedCoin) => {
         return;
       }
     };
-    return () => socket.close();
+    };
+
+    connect();
+    return () => {
+      unmounted = true;
+      dbSocketRef.current?.close();
+    };
   }, []);
 
 
@@ -131,6 +165,11 @@ const useCryptoSocket = (selectedCoin) => {
     if (coin === activeCoin) {
       setPrice(candle.close);
       setLatestCandle({ ...candle });
+
+      // Keep combinedHistory in sync with live candle updates
+      const liveData = Array.from(coinMap.values()).sort((a, b) => a.time - b.time);
+      const csvData = historicalBuffer.current[activeCoin] || [];
+      setCombinedHistory([...csvData, ...liveData]);
     }
 
   }, [lastJsonMessage, selectedCoin]);
