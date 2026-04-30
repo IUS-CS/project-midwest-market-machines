@@ -35,9 +35,6 @@ else()
   set(NPM_CMD npm)                          # Other systems do not need `npm.cmd`, where `npm` will suffice.
 endif()
 
-# Set OLLAMA_ORIGINS environment var to the localhost used in useCryptoSocket.jsx
-set(ENV{OLLAMA_ORIGINS} "http://localhost:11434")
-
 project(Binance_Websockets)                # Specify the project's name. Append `.exe` if needed.
 
 ###################################################################################################################
