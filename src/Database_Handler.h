@@ -58,6 +58,7 @@ public:
         printf(
             "Database_Handler: error writing to transactionHistory.csv\n"); // Excessive test logging
       }
+      file.close();
     }
     /* Holdings:
      * Reads holdings.csv into a map, applies the buy/sell behavior, rewrites
@@ -84,6 +85,7 @@ public:
         getline(ss, mappedQty, ',');
         holdings[mappedCoin] = atof(mappedQty.c_str());
       }
+      file.close();
     }
 
     // Apply negative/positive behavior based on JSON field "type"
@@ -110,6 +112,7 @@ public:
           file << mappedCoin << "," << mappedQty << endl;
         }
       }
+      file.close();
     }
   }
 
@@ -126,7 +129,7 @@ public:
         printf(
             "Database_Handler: error reading holdings.csv\n"); // Excessive test
                                                                // logging
-        ofstream Holdings("../userData/holdings.csv");
+        ofstream Holdings(path + "holdings.csv");
         Holdings.close();
         printf("Created holdings.csv\n");
 
@@ -182,7 +185,7 @@ public:
                                                                         // logging
 
       // If we can't find transactionHistory.csv, then we create it.
-      ofstream Transactions("../userData/transactionHistory.csv");
+      ofstream Transactions(path + "transactionHistory.csv");
       Transactions.close();
       printf("Created transactionHistory.csv\n");
 

@@ -62,9 +62,11 @@ protected:
         [](shared_ptr<ix::ConnectionState> connectionState,
            ix::WebSocket &webSocket,
            const ix::WebSocketMessagePtr &msg) -> void {
-          Database_Handler db;
+          Database_Handler db("./testData/");
 
           if (msg->type == ix::WebSocketMessageType::Open) {
+            db.sendHoldingsData(webSocket);
+            db.sendTransactionHistory(webSocket);
           }
         });
 
