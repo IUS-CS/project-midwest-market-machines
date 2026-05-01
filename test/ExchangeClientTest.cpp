@@ -10,6 +10,7 @@
  */
 
 #include "ExchangeClient.h"
+#include "ixwebsocket/IXNetSystem.h"
 #include "ixwebsocket/IXWebSocket.h"
 #include "ixwebsocket/IXWebSocketErrorInfo.h"
 #include "ixwebsocket/IXWebSocketMessage.h"
@@ -139,6 +140,9 @@ public:
  * ExchangeClient.
  */
 class MockClientHooks {
+protected:
+  void SetUpTestSuite() { ix::initNetSystem(); }
+
 public:
   MOCK_METHOD(void, OnOpen, (), ());
   MOCK_METHOD(void, OnMessage, (const string &msg), ());

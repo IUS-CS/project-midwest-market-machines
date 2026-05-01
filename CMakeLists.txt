@@ -59,22 +59,26 @@ include(GoogleTest)
 FetchContent_Declare(                       # Define the content to be fetched, and from where.
   ixwebsocket                               # Content's name.
   GIT_REPOSITORY https://github.com/machinezone/IXWebSocket.git
+  FIND_PACKAGE_ARGS NAMES ixwebsocket IXWebSocket
 )
 
 FetchContent_Declare(
   json
   GIT_REPOSITORY https://github.com/nlohmann/json.git
+  FIND_PACKAGE_ARGS NAMES nlohmann_json nlohmann::json nlohmann_json::nlohmann_json
 )
 
 FetchContent_Declare(
   googletest
   GIT_REPOSITORY https://github.com/google/googletest.git
   GIT_TAG v1.17.0
+  FIND_PACKAGE_ARGS NAMES gtest GoogleTest gmock GMock
 )
 
 FetchContent_Declare(
   webview
   GIT_REPOSITORY https://github.com/webview/webview.git
+  FIND_PACKAGE_ARGS NAMES webview WebView
 )
 
 FetchContent_Declare(
