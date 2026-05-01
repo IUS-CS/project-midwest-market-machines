@@ -78,7 +78,6 @@ protected:
    * 6. Waits for up to 1s to see if the server grabs a port.
    */
   static void SetUpTestSuite() {
-    ix::initNetSystem();
     promise<bool> IsReady;
     future<bool> FutureServerReady = IsReady.get_future();
 
@@ -142,7 +141,7 @@ public:
  */
 class MockClientHooks {
 protected:
-  void SetUp() { ix::initNetSystem(); }
+  void SetUpTestSuite() { ix::initNetSystem(); }
 
 public:
   MOCK_METHOD(void, OnOpen, (), ());
