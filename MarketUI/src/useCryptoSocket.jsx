@@ -10,6 +10,7 @@ const useCryptoSocket = (selectedCoin) => {
   const [holdings, setHoldings] = useState([]);
   const [transactions, setTransactions] = useState([]);
   const [historicalData, setHistoricalData] = useState({});
+  const [allCoinsSnapshot, setAllCoinsSnapshot] = useState({});
   //-------------------------------------------------------------
 
   //--------------- SOCKET URLS ---------------------------------
@@ -108,7 +109,7 @@ const useCryptoSocket = (selectedCoin) => {
       };
 
       coinMap.set(timeSeconds, candle);
-
+    setAllCoinsSnapshot(prev => ({ ...prev, [coin]: candle.close }));
       if (coin === activeCoinRef.current.toUpperCase()) {
         setPrice(candle.close);
         setLatestCandle(candle);
@@ -207,11 +208,10 @@ const useCryptoSocket = (selectedCoin) => {
    *    1d. If sell...
    *        a. Remove the last traded coin from setHoldings via slice.
    */
-  const trade = (type, quantity) => {
-    if (dbSocketRef.current?.readyState === WebSocket.OPEN && price !== null) {
-      const tradeData = { type, coin: selectedCoin, price, quantity };
-      console.log("Sent trade: ", tradeData);
-      dbSocketRef.current.send(JSON.stringify(tradeData));
+  const trade = (type, quantity, coin = selectedCoin) => {
+  if (dbSocketRef.current?.readyState === WebSocket.OPEN && price !== null) {
+    const tradePrice = allCoinsSnapshot[coin.toUpperCase()] ?? price;
+    const tradeData = { type, coin, price: tradePrice, quantity };
 
 
       if (type === 'buy') {
@@ -221,6 +221,6 @@ const useCryptoSocket = (selectedCoin) => {
       }
     }
   };
-  return { price, latestCandle, holdings, transactions, historicalCandles: combinedHistory, trade };
+  return { price, latestCandle, holdings, transactions, historicalCandles: combinedHistory, trade, allCoinsSnapshot, allCoinsBuffer };
 };
 export default useCryptoSocket;

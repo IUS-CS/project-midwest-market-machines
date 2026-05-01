@@ -49,16 +49,16 @@ Rules:
  * Assembles the market context block injected into every manual chat request.
  * Sections:
  *    - MARKET CONTEXT: selected coin and its live price.
- *    - ALL COIN PRICES: flattened historicalCandles so the LLM can reference
+ *    - ALL COIN PRICES: flattened allCoinsSnapshot so the LLM can reference
  *      any coin's current price when the user asks about it.
  *    - CURRENT HOLDINGS: what the user currently holds.
  *    - RECENT TRANSACTIONS: last 10 trades for personalized responses.
  */
 const buildContextString = (marketContext) => {
-  const { price, coin, holdings, transactions, historicalCandles } = marketContext;
+  const { price, coin, holdings, transactions, allCoinsSnapshot, allCoinsBuffer } = marketContext;
 
-  const allPrices = historicalCandles
-    ? Object.entries(historicalCandles).map(([c, p]) => `${c}: $${p}`).join(" | ")
+  const allPrices = allCoinsSnapshot
+    ? Object.entries(allCoinsSnapshot).map(([c, p]) => `${c}: $${p}`).join(" | ")
     : "Loading...";
 
   const holdingsSummary = holdings?.length
@@ -94,14 +94,31 @@ ${transactionSummary}
  * which prevents it from overwhelmingly prefering no action.
  * Temperature is set to 0.8 at call time to encourage varied picks across successive scans.
  */
-const buildAutoScanPrompt = (historicalCandles) => {
-  const prices = historicalCandles
-    ? Object.entries(historicalCandles).map(([c, p]) => `${c}: $${p}`).join("\n")
-    : "No data yet";
+const buildAutoScanPrompt = (allCoinsBuffer) => {
+  const coinSummaries = COINS.map(coin => {
+    const map = allCoinsBuffer?.[coin];
+    if (!map) return `${coin}: No data`;
+    const candles = Array.from(map.values())
+      .sort((a, b) => a.time - b.time)
+      .slice(-5);
+    const closes = candles.map(c => `$${c.close}`).join(" -> ");
+    return `${coin}: ${closes}`;
+  }).join("\n");
 
+  const trendSummary = COINS.map(c => {
+  const map = allCoinsBuffer?.[c];
+  if (!map) return `${c}: No data`;
+  const closes = Array.from(map.values())
+    .sort((a, b) => a.time - b.time)
+    .slice(-5)
+    .map(v => `$${v.close}`)
+    .join(" -> ");
+  return `${c}: ${closes}`;
+}).join("\n");
   return `
-=== AUTO SCAN: ALL COIN PRICES ===
-${prices}
+=== RECENT PRICE TRENDS (last 5 candles) ===
+${trendSummary}
+${coinSummaries}
 
 You are professional technical analyst doing a routine market scan, Pick ONE coin from the list above to buy or sell 1 unit of,
 or choose to take no action. Base your decision purely on the price data provided, you have no other information. 
@@ -111,7 +128,7 @@ or blank if action is "none".
   `.trim();
 };
 
-// ChatBox component — renders the floating chat window and manages message state
+// ChatBox component - renders the floating chat window and manages message state
 const ChatBox = ({ marketContext = {}, onTrade }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState([
@@ -120,7 +137,10 @@ const ChatBox = ({ marketContext = {}, onTrade }) => {
   const [input, setInput] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef(null);
-
+  const marketContextRef = useRef(marketContext); 
+  useEffect(() => {
+    marketContextRef.current = marketContext;
+  }, [marketContext]);
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
@@ -135,15 +155,15 @@ const ChatBox = ({ marketContext = {}, onTrade }) => {
    */
   useEffect(() => {
     const interval = setInterval(async () => {
-      const { historicalCandles } = marketContext;
-      if (!historicalCandles || Object.keys(historicalCandles).length < COINS.length) return;
+      const { allCoinsBuffer } = marketContextRef.current;
+      if (!allCoinsBuffer || Object.keys(allCoinsBuffer).length < COINS.length) return;
 
       try {
         const payload = {
           model: "qwen2.5:1.5b",
           messages: [
             { role: "system", content: buildSystemPrompt() },
-            { role: "user", content: buildAutoScanPrompt(historicalCandles) },
+            { role: "user", content: buildAutoScanPrompt(allCoinsBuffer) },
           ],
           stream: false,
           options: { temperature: 0.8 },
@@ -206,7 +226,7 @@ const ChatBox = ({ marketContext = {}, onTrade }) => {
    * handleSend's try/catch, which surfaces it as a chat message.
    */
   const getLLMResponse = async (userMessage) => {
-    const contextBlock = buildContextString(marketContext);
+    const contextBlock = buildContextString(marketContextRef.current);
 
     const payload = {
       model: "qwen2.5:1.5b",
