@@ -20,15 +20,17 @@ import ChatBox from './components/ChatBox'
 function App() {
   /* (1) Initialization: Sets the starting coin and establishes the socket connection */
   const [currentCoin, setCurrentCoin] = useState('BTCUSDT');
-  /* (4) Data Channel: WebSocket hook listens for changes to currentCoin and returns price */
-  const { price, latestCandle, holdings, trade, historicalCandles } = useCryptoSocket(currentCoin);
+
+  /* (4) Data Channel: WebSocket hook listens for changes to currentCoin and returns price.
+   * transactions and allCoinsSnapshot added  transactions feeds the AI trade history,
+   * allCoinsSnapshot feeds the AI a live price map of every coin for auto-scan trading. */
+  const { price, latestCandle, holdings, transactions, trade, historicalCandles, allCoinsSnapshot, allCoinsBuffer } = useCryptoSocket(currentCoin);
 
   return (
     <>
       <Navbar />
-
       <div className="App_header">
-        <h1>Simple Trade</h1>
+        <h1 className="text-5xl font-bold leading-tight">Simple Trade</h1>
         <p>Your one-stop shop for all things crypto!</p>
       </div>
       <div>
@@ -42,17 +44,22 @@ function App() {
         <div className="flex_row">
           {/* (5a) Rendered Output: ShowPrice receives the final price and renders it to the screen */}
           <ShowPrice price={price} coin={currentCoin} />
-          {/* (5b Rendered Output: CandlestickChart receives the data necessary to create and update the candles)*/}
+          {/* (5b) Rendered Output: CandlestickChart receives the data necessary to create and update the candles */}
           <CandlestickChart coin={currentCoin} latestCandle={latestCandle} historicalCandles={historicalCandles} />
         </div>
       </div>
       <div className="container mx-auto py-10">
         <PurchasesTable columns={columns} data={holdings} />
       </div>
-      {/* AI Trading Assistant ChatBox */}
-      <ChatBox />
+      {/* AI Trading Assistant ChatBox.
+        * marketContext passes all live data the AI needs to reason about the market.
+        * onTrade now forwards an optional coin argument so the AI can trade any coin,
+        * not just the one currently selected in the Watchlist. */}
+      <ChatBox
+      marketContext={{ coin: currentCoin, price, holdings, transactions, allCoinsSnapshot, allCoinsBuffer: allCoinsBuffer.current }}
+      onTrade={(action, quantity, coin) => trade(action, quantity, coin)}
+      />
     </>
   )
 }
-
 export default App
