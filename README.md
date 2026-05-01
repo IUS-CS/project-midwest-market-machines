@@ -18,9 +18,10 @@ to select any of the six available coins. There are buttons provided to *BUY* an
 A table is included beneath the chart that shows your current holdings.
 The '?' icon pop-up in the bottom right hand corner is the chat box for interacting with the LLM.
 
-The LLM will perform an ""
+The LLM will perform an "AUTO SCAN" every thirty seconds, in which it is fed the status of all coins and asked
+to make a purchase, a sale, or do nothing.
 
-Historical data is pulled in via a `<coin><timeframe>.csv` file in `userData/histroical/`.
+Historical data is pulled in via a `<coin><timeframe>.csv` file in `userData/historical/`.
 Transactions and current holdings are held in `userData/holdings.csv` and `userData/transactionHistory.csv` respectively.
 
 This application runs entirely on-device, with no calls out to third parties other than Binance US' WebSocket API.
